@@ -1,0 +1,2532 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBER SHIELD | منصة الحماية السيبرانية المتكاملة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: { dark: '#0a0e1a', darker: '#050810', card: '#111827', cardHover: '#1a2236',
+                            border: '#1e3a5f', primary: '#00d4ff', secondary: '#0099cc', accent: '#00ff88',
+                            warning: '#ff9500', danger: '#ff3366', info: '#6b8cff', purple: '#a855f7', gold: '#fbbf24' }
+                    },
+                    fontFamily: { cairo: ['Cairo','sans-serif'], mono: ['JetBrains Mono','monospace'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Cairo',sans-serif;background:#0a0e1a;color:#e2e8f0;overflow-x:hidden;min-height:100vh}
+        ::-webkit-scrollbar{width:6px}
+        ::-webkit-scrollbar-track{background:#0a0e1a}
+        ::-webkit-scrollbar-thumb{background:#1e3a5f;border-radius:3px}
+        ::-webkit-scrollbar-thumb:hover{background:#00d4ff}
+        .cyber-grid{background-image:linear-gradient(rgba(0,212,255,0.03)1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.03)1px,transparent 1px);background-size:40px 40px}
+        .scan-line{position:fixed;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#00d4ff,transparent);animation:scanLine 4s linear infinite;z-index:9999;pointer-events:none}
+        @keyframes scanLine{0%{top:0;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:100vh;opacity:0}}
+        .terminal-text{font-family:'JetBrains Mono',monospace}
+        .terminal-cursor::after{content:'|';animation:blink 1s step-end infinite;color:#00d4ff}
+        @keyframes blink{50%{opacity:0}}
+        .glass{background:rgba(17,24,39,0.8);backdrop-filter:blur(12px);border:1px solid rgba(30,58,95,0.5)}
+        .glass-light{background:rgba(17,24,39,0.5);backdrop-filter:blur(8px);border:1px solid rgba(30,58,95,0.3)}
+        .neon-glow{box-shadow:0 0 10px rgba(0,212,255,0.3),0 0 20px rgba(0,212,255,0.2)}
+        .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+        .status-dot.online{background:#00ff88;box-shadow:0 0 8px #00ff88}
+        .status-dot.warning{background:#ff9500;box-shadow:0 0 8px #ff9500}
+        .status-dot.danger{background:#ff3366;box-shadow:0 0 8px #ff3366}
+        .status-dot.offline{background:#6b7280}
+        .threat-critical{background:rgba(255,51,102,0.15);border:1px solid rgba(255,51,102,0.4)}
+        .threat-high{background:rgba(255,149,0,0.15);border:1px solid rgba(255,149,0,0.4)}
+        .threat-medium{background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.4)}
+        .threat-low{background:rgba(0,255,136,0.15);border:1px solid rgba(0,255,136,0.4)}
+        .sidebar-item{transition:all 0.3s ease;position:relative;overflow:hidden}
+        .sidebar-item::before{content:'';position:absolute;right:0;top:0;bottom:0;width:3px;background:#00d4ff;transform:scaleY(0);transition:transform 0.3s ease}
+        .sidebar-item:hover::before,.sidebar-item.active::before{transform:scaleY(1)}
+        .sidebar-item:hover,.sidebar-item.active{background:rgba(0,212,255,0.1);color:#00d4ff}
+        .cyber-card{transition:all 0.3s ease;border:1px solid rgba(30,58,95,0.5)}
+        .cyber-card:hover{border-color:rgba(0,212,255,0.5);box-shadow:0 0 20px rgba(0,212,255,0.1);transform:translateY(-2px)}
+        .cyber-input{background:rgba(17,24,39,0.8);border:1px solid rgba(30,58,95,0.5);color:#e2e8f0;transition:all 0.3s ease}
+        .cyber-input:focus{border-color:#00d4ff;box-shadow:0 0 10px rgba(0,212,255,0.2);outline:none}
+        .cyber-btn{position:relative;overflow:hidden;transition:all 0.3s ease}
+        .cyber-btn::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);transition:left 0.5s ease}
+        .cyber-btn:hover::after{left:100%}
+        .log-entry{font-family:'JetBrains Mono',monospace;border-right:3px solid transparent;transition:all 0.2s ease}
+        .log-entry:hover{background:rgba(0,212,255,0.05)}
+        .log-entry.critical{border-right-color:#ff3366}
+        .log-entry.high{border-right-color:#ff9500}
+        .log-entry.medium{border-right-color:#fbbf24}
+        .log-entry.low{border-right-color:#00ff88}
+        .log-entry.info{border-right-color:#6b8cff}
+        .toast-container{position:fixed;top:20px;left:20px;z-index:9999}
+        .toast{animation:slideIn 0.3s ease-out}
+        @keyframes slideIn{0%{transform:translateX(100%);opacity:0}100%{transform:translateX(0);opacity:1}}
+        @keyframes fadeIn{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:translateY(0)}}
+        .section-content{animation:fadeIn 0.4s ease-out}
+        .cyber-spinner{border:3px solid rgba(0,212,255,0.1);border-top-color:#00d4ff;border-radius:50%;animation:spin 1s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+        .badge-critical{background:rgba(255,51,102,0.2);color:#ff3366}
+        .badge-high{background:rgba(255,149,0,0.2);color:#ff9500}
+        .badge-medium{background:rgba(251,191,36,0.2);color:#fbbf24}
+        .badge-low{background:rgba(0,255,136,0.2);color:#00ff88}
+        .badge-info{background:rgba(107,140,255,0.2);color:#6b8cff}
+        .breathing{animation:breathing 2s ease-in-out infinite}
+        @keyframes breathing{0%,100%{opacity:1}50%{opacity:0.5}}
+        .upload-zone{border:2px dashed #1e3a5f;border-radius:12px;transition:all 0.3s ease;cursor:pointer}
+        .upload-zone:hover,.upload-zone.dragover{border-color:#00d4ff;background:rgba(0,212,255,0.05)}
+        .api-endpoint{border-right:4px solid;transition:all 0.2s ease}
+        .api-endpoint.get{border-right-color:#00ff88}
+        .api-endpoint.post{border-right-color:#00d4ff}
+        .api-endpoint.put{border-right-color:#fbbf24}
+        .api-endpoint.delete{border-right-color:#ff3366}
+        .db-table{border:1px solid #1e3a5f;border-radius:8px;overflow:hidden}
+        .db-table-header{background:rgba(0,212,255,0.1);padding:8px 12px;font-weight:600;color:#00d4ff;border-bottom:1px solid #1e3a5f}
+        .db-table-row{padding:6px 12px;border-bottom:1px solid rgba(30,58,95,0.3);font-family:'JetBrains Mono',monospace;font-size:12px}
+        .db-table-row:last-child{border-bottom:none}
+        .timeline-item{position:relative;padding-right:24px;border-right:2px solid #1e3a5f}
+        .timeline-item::before{content:'';position:absolute;right:-5px;top:6px;width:8px;height:8px;border-radius:50%;background:#00d4ff}
+        .timeline-item:last-child{border-right:2px solid transparent}
+        .code-block{background:#0d1117;border:1px solid #30363d;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6}
+        .score-ring{position:relative;width:120px;height:120px}
+        .score-ring svg{transform:rotate(-90deg)}
+        .score-value{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:28px;font-weight:700}
+        .cyber-checkbox{appearance:none;width:18px;height:18px;border:2px solid #1e3a5f;border-radius:4px;background:rgba(17,24,39,0.8);cursor:pointer;transition:all 0.2s ease}
+        .cyber-checkbox:checked{background:#00d4ff;border-color:#00d4ff}
+        .cyber-checkbox:checked::after{content:'✓';display:block;text-align:center;color:#0a0e1a;font-size:12px;font-weight:bold;line-height:14px}
+        .cyber-toggle{appearance:none;width:44px;height:24px;background:#1e3a5f;border-radius:12px;position:relative;cursor:pointer;transition:background 0.3s ease}
+        .cyber-toggle::after{content:'';position:absolute;width:20px;height:20px;background:#e2e8f0;border-radius:50%;top:2px;right:2px;transition:all 0.3s ease}
+        .cyber-toggle:checked{background:#00d4ff}
+        .cyber-toggle:checked::after{right:22px;background:#0a0e1a}
+        .network-node{transition:all 0.3s ease;cursor:pointer}
+        .network-node:hover{transform:scale(1.2)}
+        @media(max-width:768px){.sidebar{transform:translateX(100%)}.sidebar.open{transform:translateX(0)}}
+        .alert-banner{animation:slideDown 0.3s ease-out}
+        @keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+    </style>
+</head>
+<body class="cyber-grid">
+    <div class="scan-line"></div>
+    <div id="toastContainer" class="toast-container"></div>
+    
+    <!-- ==================== LOGIN SCREEN ==================== -->
+    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center" style="background:linear-gradient(135deg,#0a0e1a 0%,#111827 50%,#0a0e1a 100%)">
+        <div class="w-full max-w-md p-8 glass rounded-2xl neon-glow mx-4">
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-cyber-primary to-cyber-secondary flex items-center justify-center">
+                    <i class="fas fa-shield-alt text-4xl text-white"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-cyber-primary mb-2">CYBER SHIELD</h1>
+                <p class="text-gray-400 text-sm">منصة الحماية السيبرانية المتكاملة</p>
+                <div class="mt-2 text-xs text-cyber-accent font-mono"><span class="terminal-cursor">جاري تهيئة النظام الأمني...</span></div>
+            </div>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-400 mb-2">اسم المستخدم</label>
+                    <div class="relative">
+                        <i class="fas fa-user absolute right-3 top-3 text-gray-500"></i>
+                        <input type="text" id="loginUsername" class="cyber-input w-full pr-10 pl-4 py-3 rounded-lg" placeholder="أدخل اسم المستخدم" required autocomplete="username">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-400 mb-2">كلمة المرور</label>
+                    <div class="relative">
+                        <i class="fas fa-lock absolute right-3 top-3 text-gray-500"></i>
+                        <input type="password" id="loginPassword" class="cyber-input w-full pr-10 pl-4 py-3 rounded-lg" placeholder="أدخل كلمة المرور" required autocomplete="current-password">
+                        <button type="button" onclick="togglePassword('loginPassword')" class="absolute left-3 top-3 text-gray-500 hover:text-cyber-primary"><i class="fas fa-eye"></i></button>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm text-gray-400 mb-2">دور المستخدم</label>
+                    <select id="loginRole" class="cyber-input w-full px-4 py-3 rounded-lg">
+                        <option value="admin">مدير النظام (Admin)</option>
+                        <option value="analyst">محلل أمني (Security Analyst)</option>
+                        <option value="viewer">مراقب فقط (Viewer)</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-between mb-6">
+                    <label class="flex items-center cursor-pointer"><input type="checkbox" class="cyber-checkbox ml-2"><span class="text-sm text-gray-400">تذكرني</span></label>
+                    <a href="#" onclick="showForgotPassword()" class="text-sm text-cyber-primary hover:underline">نسيت كلمة المرور؟</a>
+                </div>
+                <button type="submit" class="cyber-btn w-full bg-gradient-to-r from-cyber-primary to-cyber-secondary text-white font-bold py-3 rounded-lg hover:shadow-lg hover:shadow-cyber-primary/30 transition-all">
+                    <i class="fas fa-sign-in-alt ml-2"></i>تسجيل الدخول
+                </button>
+                <div class="mt-4 text-center">
+                    <p class="text-xs text-gray-500"><i class="fas fa-info-circle ml-1"></i>بيانات الدخول الافتراضية: admin / admin123</p>
+                </div>
+            </form>
+            <div class="mt-6 pt-4 border-t border-cyber-border">
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div class="p-2 rounded bg-cyber-dark/50"><i class="fas fa-lock text-cyber-accent text-lg"></i><p class="text-xs text-gray-400 mt-1">تشفير AES-256</p></div>
+                    <div class="p-2 rounded bg-cyber-dark/50"><i class="fas fa-fingerprint text-cyber-primary text-lg"></i><p class="text-xs text-gray-400 mt-1">MFA</p></div>
+                    <div class="p-2 rounded bg-cyber-dark/50"><i class="fas fa-shield-virus text-cyber-warning text-lg"></i><p class="text-xs text-gray-400 mt-1">حماية XSS</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN APPLICATION ==================== -->
+    <div id="mainApp" class="hidden">
+        <!-- Top Header -->
+        <header class="fixed top-0 right-0 left-0 h-16 glass z-40 flex items-center justify-between px-4 lg:px-6">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()" class="lg:hidden text-gray-400 hover:text-cyber-primary p-2"><i class="fas fa-bars text-xl"></i></button>
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyber-primary to-cyber-secondary flex items-center justify-center"><i class="fas fa-shield-alt text-white text-lg"></i></div>
+                    <div>
+                        <h1 class="text-lg font-bold text-cyber-primary">CYBER SHIELD</h1>
+                        <p class="text-xs text-gray-500 font-mono" id="systemStatus">SYSTEM ONLINE</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyber-dark/50 border border-cyber-border">
+                    <span class="text-xs text-gray-400">مستوى التهديد:</span>
+                    <span id="globalThreatLevel" class="text-xs font-bold text-cyber-accent">منخفض</span>
+                    <span class="status-dot online" id="threatDot"></span>
+                </div>
+                <div class="hidden md:block text-right">
+                    <div id="clockTime" class="text-sm font-mono font-bold text-cyber-primary">00:00:00</div>
+                    <div id="clockDate" class="text-xs text-gray-500">2024-01-01</div>
+                </div>
+                <div class="relative">
+                    <button onclick="toggleNotifications()" class="relative p-2 text-gray-400 hover:text-cyber-primary transition-colors">
+                        <i class="fas fa-bell text-lg"></i>
+                        <span id="notifBadge" class="absolute top-0 right-0 w-5 h-5 bg-cyber-danger text-white text-xs rounded-full flex items-center justify-center font-bold">3</span>
+                    </button>
+                    <div id="notificationsPanel" class="hidden absolute left-0 top-12 w-80 glass rounded-xl border border-cyber-border overflow-hidden shadow-2xl">
+                        <div class="p-3 border-b border-cyber-border flex items-center justify-between">
+                            <h3 class="font-bold text-sm">التنبيهات الأمنية</h3>
+                            <button onclick="clearAllNotifications()" class="text-xs text-cyber-primary hover:underline">مسح الكل</button>
+                        </div>
+                        <div id="notificationsList" class="max-h-64 overflow-y-auto"></div>
+                    </div>
+                </div>
+                <div class="relative">
+                    <button onclick="toggleUserMenu()" class="flex items-center gap-2 p-2 rounded-lg hover:bg-cyber-dark/50 transition-colors">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyber-primary to-cyber-purple flex items-center justify-center text-white font-bold text-sm" id="userAvatar">A</div>
+                        <div class="hidden md:block text-right">
+                            <div id="userNameDisplay" class="text-sm font-semibold">Admin</div>
+                            <div id="userRoleDisplay" class="text-xs text-gray-500">مدير النظام</div>
+                        </div>
+                        <i class="fas fa-chevron-down text-xs text-gray-500"></i>
+                    </button>
+                    <div id="userMenu" class="hidden absolute left-0 top-12 w-48 glass rounded-xl border border-cyber-border overflow-hidden shadow-2xl">
+                        <div class="p-3 border-b border-cyber-border">
+                            <div id="menuUserName" class="font-bold text-sm">Admin</div>
+                            <div id="menuUserRole" class="text-xs text-gray-500">مدير النظام</div>
+                        </div>
+                        <a href="#" onclick="showSection('profile')" class="block px-4 py-2.5 text-sm hover:bg-cyber-primary/10 hover:text-cyber-primary transition-colors"><i class="fas fa-user ml-2"></i>الملف الشخصي</a>
+                        <a href="#" onclick="showSection('settings')" class="block px-4 py-2.5 text-sm hover:bg-cyber-primary/10 hover:text-cyber-primary transition-colors"><i class="fas fa-cog ml-2"></i>الإعدادات</a>
+                        <div class="border-t border-cyber-border"></div>
+                        <a href="#" onclick="handleLogout()" class="block px-4 py-2.5 text-sm text-cyber-danger hover:bg-cyber-danger/10 transition-colors"><i class="fas fa-sign-out-alt ml-2"></i>تسجيل الخروج</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="fixed top-16 right-0 bottom-0 w-64 glass z-30 overflow-y-auto transform transition-transform duration-300 lg:translate-x-0 translate-x-full">
+            <div class="p-4">
+                <div class="mb-6 p-3 rounded-xl bg-cyber-dark/50 border border-cyber-border">
+                    <div class="text-xs text-gray-500 mb-2">حالة النظام</div>
+                    <div class="flex items-center gap-2 mb-2"><span class="status-dot online"></span><span class="text-sm">النظام يعمل</span></div>
+                    <div class="flex items-center justify-between text-xs"><span class="text-gray-500">الجلسة:</span><span id="sessionTimer" class="font-mono text-cyber-primary">00:00:00</span></div>
+                </div>
+                <nav class="space-y-1">
+                    <div class="text-xs text-gray-500 px-3 py-2 uppercase tracking-wider">الرئيسية</div>
+                    <a href="#" onclick="showSection('dashboard')" class="sidebar-item active flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm" data-section="dashboard"><i class="fas fa-th-large w-5 text-center"></i><span>لوحة التحكم</span></a>
+                    <div class="text-xs text-gray-500 px-3 py-2 uppercase tracking-wider mt-4">العمليات الأمنية</div>
+                    <a href="#" onclick="showSection('soc')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm" data-section="soc"><i class="fas fa-satellite-dish w-5 text-center"></i><span>مركز العمليات SOC</span><span id="socBadge" class="mr-auto badge badge-critical">12</span></a>
+                    <a href="#" onclick="showSection('firewall')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm" data-section="firewall"><i class="fas fa-fire-alt w-5 text-center"></i><span>جدار الحماية</span><span class="mr-auto badge badge-info">نشط</span></a>
+                    <a href="#" onclick="showSection('intrusion')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm" data-section="intrusion"><i class="fas fa-user-secret w-5 text-center"></i><span>كشف التسلل IDS/IPS</span></a>
+                    <a href="#" onclick="showSection('threatIntel')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm" data-section="threatIntel"><i class="fas fa-brain w-5 text-center"></i><span>ذكاء التهديدات</span></a>
+                    <div class="text-xs text-gray-500 px-3 py-2 uppercase tracking-wider mt-4">الفحص والتحليل</div>
+                    <a href="#" onclick="showSection('scanner')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm" data-section="scanner"><i class="fas fa-search w-5 text-center"></i><span>فحص المواقع</span></a>
+                    <a href="#" onclick="showSection('vulnerabilities')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm" data-section="vulnerabilities"><i class="fas fa-bug w-5 text-center"></i><span>إدارة الثغرات</span><span id="vulnBadge" class="mr-auto badge badge-high">8</span></a>
+                    <a href="#" onclick="showSection('emailAnalyzer')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm" data-section="emailAnalyzer"><i class="fas fa-envelope-open-text w-5 text-center"></i><span>تحليل البريد</span></a>
+                    <a href="#" onclick="showSection('urlAnalyzer')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm" data-section="urlAnalyzer"><i class="fas fa-link w-5 text-center"></i><span>تحليل الروابط</span></a>
+                    <a href="#" onclick="showSection('logAnalyzer')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm" data-section="logAnalyzer"><i class="fas fa-file-alt w-5 text-center"></i><span>تحليل السجلات</span></a>
+                    <div class="text-xs text-gray-500 px-3 py-2 uppercase tracking-wider mt-4">الإدارة</div>
+                    <a href="#" onclick="showSection('users')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm" data-section="users"><i class="fas fa-users-cog w-5 text-center"></i><span>المستخدمين والصلاحيات</span></a>
+                    <a href="#" onclick="showSection('database')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm" data-section="database"><i class="fas fa-database w-5 text-center"></i><span>قاعدة البيانات</span></a>
+                    <a href="#" onclick="showSection('api')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm" data-section="api"><i class="fas fa-code w-5 text-center"></i><span>API واجهات البرمجة</span></a>
+                    <a href="#" onclick="showSection('reports')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm" data-section="reports"><i class="fas fa-chart-bar w-5 text-center"></i><span>التقارير</span></a>
+                    <a href="#" onclick="showSection('settings')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm" data-section="settings"><i class="fas fa-cogs w-5 text-center"></i><span>إعدادات النظام</span></a>
+                </nav>
+                <div class="mt-6 p-3 rounded-xl bg-cyber-dark/50 border border-cyber-border">
+                    <div class="text-xs text-gray-500 mb-2">معلومات النظام</div>
+                    <div class="space-y-1 text-xs">
+                        <div class="flex justify-between"><span class="text-gray-500">الإصدار:</span><span class="font-mono text-cyber-primary">v3.2.1</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">قاعدة البيانات:</span><span class="font-mono text-cyber-accent">متصلة</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">آخر تحديث:</span><span class="font-mono">منذ 5 دقائق</span></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main id="mainContent" class="mr-0 lg:mr-64 mt-16 min-h-screen p-4 lg:p-6 transition-all">
+            <!-- ==================== DASHBOARD ==================== -->
+            <section id="dashboard" class="section-content">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-1">لوحة التحكم الأمنية</h2>
+                    <p class="text-gray-400 text-sm">نظرة شاملة على حالة الأمن السيبراني</p>
+                </div>
+                
+                <!-- Critical Alert Banner -->
+                <div id="criticalAlertBanner" class="alert-banner hidden mb-6 p-4 rounded-xl border border-cyber-danger/50 bg-cyber-danger/10 flex items-center gap-3">
+                    <i class="fas fa-exclamation-triangle text-cyber-danger text-xl breathing"></i>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-cyber-danger">تنبيه أمني حرج!</h3>
+                        <p class="text-sm text-gray-300">تم اكتشاف محاولة اختراق من IP: 185.220.101.42 - هجوم Brute Force على البوابة الرئيسية</p>
+                    </div>
+                    <button onclick="dismissCriticalAlert()" class="px-4 py-2 bg-cyber-danger/20 text-cyber-danger rounded-lg hover:bg-cyber-danger/30 transition-colors text-sm"><i class="fas fa-shield-alt ml-1"></i>معالجة</button>
+                    <button onclick="dismissCriticalAlert()" class="text-gray-500 hover:text-white"><i class="fas fa-times"></i></button>
+                </div>
+                
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="cyber-card glass rounded-xl p-5 relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-32 h-32 bg-cyber-danger/5 rounded-full -translate-x-16 -translate-y-16"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="w-12 h-12 rounded-xl bg-cyber-danger/10 flex items-center justify-center"><i class="fas fa-exclamation-triangle text-cyber-danger text-xl"></i></div>
+                                <span class="text-xs text-cyber-danger font-bold">+12%</span>
+                            </div>
+                            <div class="text-3xl font-bold text-white mb-1" id="totalThreats">1,247</div>
+                            <div class="text-sm text-gray-400">التهديدات المكتشفة</div>
+                            <div class="mt-3 flex gap-2"><span class="badge badge-critical text-xs">حرج: 3</span><span class="badge badge-high text-xs">مرتفع: 12</span></div>
+                        </div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-5 relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-32 h-32 bg-cyber-accent/5 rounded-full -translate-x-16 -translate-y-16"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="w-12 h-12 rounded-xl bg-cyber-accent/10 flex items-center justify-center"><i class="fas fa-desktop text-cyber-accent text-xl"></i></div>
+                                <span class="text-xs text-cyber-accent font-bold">+5</span>
+                            </div>
+                            <div class="text-3xl font-bold text-white mb-1" id="connectedDevices">342</div>
+                            <div class="text-sm text-gray-400">الأجهزة المتصلة</div>
+                            <div class="mt-3 flex gap-2"><span class="badge badge-info text-xs">نشط: 338</span><span class="badge badge-high text-xs">غير آمن: 4</span></div>
+                        </div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-5 relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-32 h-32 bg-cyber-warning/5 rounded-full -translate-x-16 -translate-y-16"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="w-12 h-12 rounded-xl bg-cyber-warning/10 flex items-center justify-center"><i class="fas fa-bell text-cyber-warning text-xl"></i></div>
+                                <span class="text-xs text-cyber-warning font-bold">+8</span>
+                            </div>
+                            <div class="text-3xl font-bold text-white mb-1" id="totalAlerts">89</div>
+                            <div class="text-sm text-gray-400">التنبيهات النشطة</div>
+                            <div class="mt-3 w-full bg-cyber-dark rounded-full h-2"><div class="bg-gradient-to-r from-cyber-accent to-cyber-warning h-2 rounded-full" style="width:65%"></div></div>
+                        </div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-5 relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-32 h-32 bg-cyber-primary/5 rounded-full -translate-x-16 -translate-y-16"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="w-12 h-12 rounded-xl bg-cyber-primary/10 flex items-center justify-center"><i class="fas fa-shield-alt text-cyber-primary text-xl"></i></div>
+                                <span class="text-xs text-cyber-primary font-bold">ممتاز</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="score-ring">
+                                    <svg width="120" height="120" viewBox="0 0 120 120">
+                                        <circle cx="60" cy="60" r="50" fill="none" stroke="#1e3a5f" stroke-width="8"/>
+                                        <circle cx="60" cy="60" r="50" fill="none" stroke="#00d4ff" stroke-width="8" stroke-dasharray="314" stroke-dashoffset="31" stroke-linecap="round" class="progress-ring-circle"/>
+                                    </svg>
+                                    <div class="score-value text-cyber-primary">90</div>
+                                </div>
+                                <div>
+                                    <div class="text-sm text-gray-400">درجة الأمان</div>
+                                    <div class="text-xs text-cyber-accent mt-1"><i class="fas fa-arrow-up ml-1"></i>+5 من الأسبوع الماضي</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                    <div class="cyber-card glass rounded-xl p-5 lg:col-span-2">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-lg"><i class="fas fa-chart-line text-cyber-primary ml-2"></i>حركة التهديدات - 7 أيام</h3>
+                            <select class="cyber-input text-xs px-3 py-1 rounded" onchange="updateThreatChart(this.value)">
+                                <option value="7">7 أيام</option><option value="30">30 يوم</option><option value="90">3 أشهر</option>
+                            </select>
+                        </div>
+                        <div class="h-64"><canvas id="threatChart"></canvas></div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <h3 class="font-bold text-lg mb-4"><i class="fas fa-chart-pie text-cyber-accent ml-2"></i>توزيع التهديدات</h3>
+                        <div class="h-48"><canvas id="threatPieChart"></canvas></div>
+                        <div class="mt-4 space-y-2">
+                            <div class="flex items-center justify-between text-sm"><span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-cyber-danger"></span>هجمات DDoS</span><span class="font-mono">35%</span></div>
+                            <div class="flex items-center justify-between text-sm"><span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-cyber-warning"></span>Brute Force</span><span class="font-mono">28%</span></div>
+                            <div class="flex items-center justify-between text-sm"><span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-cyber-primary"></span>Malware</span><span class="font-mono">22%</span></div>
+                            <div class="flex items-center justify-between text-sm"><span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-cyber-purple"></span>Phishing</span><span class="font-mono">15%</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Live Activity & Network -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-lg"><i class="fas fa-bolt text-cyber-warning ml-2"></i>النشاط المباشر</h3>
+                            <span class="flex items-center gap-2 text-xs text-cyber-accent"><span class="status-dot online"></span>مباشر</span>
+                        </div>
+                        <div id="liveActivityFeed" class="space-y-2 max-h-64 overflow-y-auto"></div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <h3 class="font-bold text-lg mb-4"><i class="fas fa-network-wired text-cyber-primary ml-2"></i>حالة الشبكة</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-sm mb-1"><span>استهلاك النطاق الترددي</span><span class="font-mono text-cyber-primary">2.4 Gbps / 10 Gbps</span></div>
+                                <div class="w-full bg-cyber-dark rounded-full h-3"><div class="bg-gradient-to-r from-cyber-primary to-cyber-accent h-3 rounded-full transition-all duration-1000" style="width:24%"></div></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1"><span>حزم البيانات/ثانية</span><span class="font-mono text-cyber-warning">145,230 pps</span></div>
+                                <div class="w-full bg-cyber-dark rounded-full h-3"><div class="bg-gradient-to-r from-cyber-warning to-cyber-danger h-3 rounded-full transition-all duration-1000" style="width:58%"></div></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1"><span>استخدام CPU - Firewall</span><span class="font-mono text-cyber-accent">34%</span></div>
+                                <div class="w-full bg-cyber-dark rounded-full h-3"><div class="bg-gradient-to-r from-cyber-accent to-cyber-primary h-3 rounded-full transition-all duration-1000" style="width:34%"></div></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1"><span>استخدام الذاكرة</span><span class="font-mono text-cyber-info">6.2 GB / 16 GB</span></div>
+                                <div class="w-full bg-cyber-dark rounded-full h-3"><div class="bg-gradient-to-r from-cyber-info to-cyber-purple h-3 rounded-full transition-all duration-1000" style="width:39%"></div></div>
+                            </div>
+                        </div>
+                        <div class="mt-4 grid grid-cols-3 gap-2">
+                            <div class="text-center p-2 rounded-lg bg-cyber-dark/50"><div class="text-lg font-bold text-cyber-accent">99.9%</div><div class="text-xs text-gray-500">التوفر</div></div>
+                            <div class="text-center p-2 rounded-lg bg-cyber-dark/50"><div class="text-lg font-bold text-cyber-primary">12ms</div><div class="text-xs text-gray-500">زمن الاستجابة</div></div>
+                            <div class="text-center p-2 rounded-lg bg-cyber-dark/50"><div class="text-lg font-bold text-cyber-warning">0</div><div class="text-xs text-gray-500">انقطاعات</div></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="cyber-card glass rounded-xl p-5">
+                    <h3 class="font-bold text-lg mb-4"><i class="fas fa-rocket text-cyber-primary ml-2"></i>إجراءات سريعة</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <button onclick="showSection('scanner');startQuickScan()" class="cyber-btn p-4 rounded-xl bg-cyber-dark/50 border border-cyber-border hover:border-cyber-primary text-center transition-all"><i class="fas fa-search text-2xl text-cyber-primary mb-2 block"></i><span class="text-sm">فحص سريع</span></button>
+                        <button onclick="showSection('firewall');blockSuspiciousIPs()" class="cyber-btn p-4 rounded-xl bg-cyber-dark/50 border border-cyber-border hover:border-cyber-danger text-center transition-all"><i class="fas fa-ban text-2xl text-cyber-danger mb-2 block"></i><span class="text-sm">حظر IP مشبوه</span></button>
+                        <button onclick="generateQuickReport()" class="cyber-btn p-4 rounded-xl bg-cyber-dark/50 border border-cyber-border hover:border-cyber-accent text-center transition-all"><i class="fas fa-file-pdf text-2xl text-cyber-accent mb-2 block"></i><span class="text-sm">تقرير سريع</span></button>
+                        <button onclick="showSection('soc');refreshSOC()" class="cyber-btn p-4 rounded-xl bg-cyber-dark/50 border border-cyber-border hover:border-cyber-warning text-center transition-all"><i class="fas fa-sync-alt text-2xl text-cyber-warning mb-2 block"></i><span class="text-sm">تحديث SOC</span></button>
+                    </div>
+                </div>
+            </section>
+            <!-- ==================== SOC CENTER ==================== -->
+            <section id="soc" class="section-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-1">مركز عمليات الأمن SOC</h2>
+                    <p class="text-gray-400 text-sm">مراقبة الأحداث الأمنية لحظياً وإدارة الحوادث</p>
+                </div>
+                
+                <!-- SOC Stats -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="w-12 h-12 mx-auto rounded-full bg-cyber-danger/10 flex items-center justify-center mb-2"><i class="fas fa-skull-crossbones text-cyber-danger text-xl"></i></div>
+                        <div class="text-2xl font-bold text-cyber-danger" id="socCritical">3</div><div class="text-xs text-gray-400">حرج</div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="w-12 h-12 mx-auto rounded-full bg-cyber-warning/10 flex items-center justify-center mb-2"><i class="fas fa-exclamation-circle text-cyber-warning text-xl"></i></div>
+                        <div class="text-2xl font-bold text-cyber-warning" id="socHigh">12</div><div class="text-xs text-gray-400">مرتفع</div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="w-12 h-12 mx-auto rounded-full bg-cyber-gold/10 flex items-center justify-center mb-2"><i class="fas fa-exclamation-triangle text-cyber-gold text-xl"></i></div>
+                        <div class="text-2xl font-bold text-cyber-gold" id="socMedium">28</div><div class="text-xs text-gray-400">متوسط</div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="w-12 h-12 mx-auto rounded-full bg-cyber-accent/10 flex items-center justify-center mb-2"><i class="fas fa-info-circle text-cyber-accent text-xl"></i></div>
+                        <div class="text-2xl font-bold text-cyber-accent" id="socLow">46</div><div class="text-xs text-gray-400">منخفض</div>
+                    </div>
+                </div>
+                
+                <!-- Alerts Table -->
+                <div class="cyber-card glass rounded-xl p-5 mb-6">
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                        <h3 class="font-bold text-lg"><i class="fas fa-list-ul text-cyber-primary ml-2"></i>التنبيهات الأمنية</h3>
+                        <div class="flex gap-2">
+                            <select id="alertFilter" class="cyber-input text-xs px-3 py-2 rounded-lg" onchange="filterAlerts()">
+                                <option value="all">جميع المستويات</option>
+                                <option value="critical">حرج</option>
+                                <option value="high">مرتفع</option>
+                                <option value="medium">متوسط</option>
+                                <option value="low">منخفض</option>
+                            </select>
+                            <button onclick="refreshAlerts()" class="cyber-btn px-4 py-2 bg-cyber-primary/20 text-cyber-primary rounded-lg hover:bg-cyber-primary/30 text-sm"><i class="fas fa-sync-alt ml-1"></i>تحديث</button>
+                            <button onclick="exportAlerts()" class="cyber-btn px-4 py-2 bg-cyber-accent/20 text-cyber-accent rounded-lg hover:bg-cyber-accent/30 text-sm"><i class="fas fa-download ml-1"></i>تصدير</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full cyber-table">
+                            <thead>
+                                <tr class="text-right">
+                                    <th class="px-4 py-3 text-xs">المعرف</th>
+                                    <th class="px-4 py-3 text-xs">الوقت</th>
+                                    <th class="px-4 py-3 text-xs">النوع</th>
+                                    <th class="px-4 py-3 text-xs">المصدر</th>
+                                    <th class="px-4 py-3 text-xs">الهدف</th>
+                                    <th class="px-4 py-3 text-xs">المستوى</th>
+                                    <th class="px-4 py-3 text-xs">الحالة</th>
+                                    <th class="px-4 py-3 text-xs">إجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody id="alertsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Incident Timeline & Details -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <h3 class="font-bold text-lg mb-4"><i class="fas fa-history text-cyber-primary ml-2"></i>السجل الزمني للحوادث</h3>
+                        <div id="incidentTimeline" class="space-y-0 pr-2"></div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <h3 class="font-bold text-lg mb-4"><i class="fas fa-crosshairs text-cyber-danger ml-2"></i>تفاصيل الحادث الأخير</h3>
+                        <div id="incidentDetails" class="space-y-3">
+                            <div class="p-3 rounded-lg bg-cyber-dark/50 border border-cyber-border">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-bold text-cyber-danger">هجوم DDoS - Layer 7</span>
+                                    <span class="badge badge-critical">حرج</span>
+                                </div>
+                                <div class="text-xs text-gray-400 space-y-1">
+                                    <div><i class="fas fa-clock ml-1"></i>2024-06-26 08:42:15 UTC</div>
+                                    <div><i class="fas fa-globe ml-1"></i>المصدر: 185.220.101.42 (روسيا)</div>
+                                    <div><i class="fas fa-bullseye ml-1"></i>الهدف: api.company.com</div>
+                                    <div><i class="fas fa-tachometer-alt ml-1"></i>الحجم: 45,000 req/sec</div>
+                                </div>
+                            </div>
+                            <div class="p-3 rounded-lg bg-cyber-dark/50 border border-cyber-border">
+                                <div class="text-sm font-bold text-cyber-primary mb-2">إجراءات الاستجابة</div>
+                                <div class="space-y-2">
+                                    <div class="flex items-center gap-2 text-xs"><i class="fas fa-check-circle text-cyber-accent"></i><span>تفعيل Cloudflare DDoS Protection</span></div>
+                                    <div class="flex items-center gap-2 text-xs"><i class="fas fa-check-circle text-cyber-accent"></i><span>حظر IP المصدر على Firewall</span></div>
+                                    <div class="flex items-center gap-2 text-xs"><i class="fas fa-spinner text-cyber-warning fa-spin"></i><span>تحليل حركة المرور المشبوهة</span></div>
+                                    <div class="flex items-center gap-2 text-xs"><i class="fas fa-hourglass-start text-gray-500"></i><span>إخطار فريق الاستجابة</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Attack Map -->
+                <div class="cyber-card glass rounded-xl p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-lg"><i class="fas fa-globe text-cyber-primary ml-2"></i>خريطة الهجمات المباشرة</h3>
+                        <div class="flex gap-2">
+                            <span class="flex items-center gap-1 text-xs"><span class="w-2 h-2 rounded-full bg-cyber-danger"></span>هجوم نشط</span>
+                            <span class="flex items-center gap-1 text-xs"><span class="w-2 h-2 rounded-full bg-cyber-warning"></span>محاولة</span>
+                            <span class="flex items-center gap-1 text-xs"><span class="w-2 h-2 rounded-full bg-cyber-accent"></span>تم صدها</span>
+                        </div>
+                    </div>
+                    <div class="relative h-80 bg-cyber-darker rounded-xl overflow-hidden border border-cyber-border">
+                        <canvas id="attackMapCanvas" class="w-full h-full"></canvas>
+                        <div class="absolute bottom-4 left-4 glass px-3 py-2 rounded-lg text-xs">
+                            <div class="font-bold text-cyber-primary mb-1">إحصائيات اللحظة</div>
+                            <div>الهجمات/الدقيقة: <span class="text-cyber-danger font-mono">24</span></div>
+                            <div>تم صدها: <span class="text-cyber-accent font-mono">23</span></div>
+                            <div>الدول المصدر: <span class="text-cyber-warning font-mono">7</span></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- ==================== FIREWALL ==================== -->
+            <section id="firewall" class="section-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-1">جدار الحماية المتقدم</h2>
+                    <p class="text-gray-400 text-sm">إدارة قواعد الجدار الناري ورصد محاولات الاختراق</p>
+                </div>
+                
+                <!-- Firewall Status -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="cyber-card glass rounded-xl p-5 text-center">
+                        <div class="w-16 h-16 mx-auto rounded-full bg-cyber-accent/10 flex items-center justify-center mb-3"><i class="fas fa-shield-alt text-cyber-accent text-2xl"></i></div>
+                        <div class="text-2xl font-bold text-cyber-accent">نشط</div>
+                        <div class="text-sm text-gray-400">حالة الجدار الناري</div>
+                        <div class="mt-3 text-xs text-gray-500">آخر تحديث: منذ 2 ثانية</div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-5 text-center">
+                        <div class="w-16 h-16 mx-auto rounded-full bg-cyber-danger/10 flex items-center justify-center mb-3"><i class="fas fa-ban text-cyber-danger text-2xl"></i></div>
+                        <div class="text-2xl font-bold text-cyber-danger" id="blockedConnections">45,231</div>
+                        <div class="text-sm text-gray-400">اتصالات محظورة</div>
+                        <div class="mt-3 text-xs text-cyber-accent">+1,234 اليوم</div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-5 text-center">
+                        <div class="w-16 h-16 mx-auto rounded-full bg-cyber-primary/10 flex items-center justify-center mb-3"><i class="fas fa-check-circle text-cyber-primary text-2xl"></i></div>
+                        <div class="text-2xl font-bold text-cyber-primary" id="allowedConnections">892,456</div>
+                        <div class="text-sm text-gray-400">اتصالات مسموحة</div>
+                        <div class="mt-3 text-xs text-cyber-accent">+45,678 اليوم</div>
+                    </div>
+                </div>
+                
+                <!-- Firewall Rules -->
+                <div class="cyber-card glass rounded-xl p-5 mb-6">
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                        <h3 class="font-bold text-lg"><i class="fas fa-list-ol text-cyber-primary ml-2"></i>قواعد الجدار الناري</h3>
+                        <div class="flex gap-2">
+                            <button onclick="showAddRuleModal()" class="cyber-btn px-4 py-2 bg-cyber-primary/20 text-cyber-primary rounded-lg hover:bg-cyber-primary/30 text-sm"><i class="fas fa-plus ml-1"></i>قاعدة جديدة</button>
+                            <button onclick="importRules()" class="cyber-btn px-4 py-2 bg-cyber-accent/20 text-cyber-accent rounded-lg hover:bg-cyber-accent/30 text-sm"><i class="fas fa-upload ml-1"></i>استيراد</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full cyber-table">
+                            <thead>
+                                <tr class="text-right">
+                                    <th class="px-4 py-3 text-xs">#</th>
+                                    <th class="px-4 py-3 text-xs">الاسم</th>
+                                    <th class="px-4 py-3 text-xs">المصدر</th>
+                                    <th class="px-4 py-3 text-xs">الوجهة</th>
+                                    <th class="px-4 py-3 text-xs">المنفذ</th>
+                                    <th class="px-4 py-3 text-xs">البروتوكول</th>
+                                    <th class="px-4 py-3 text-xs">الإجراء</th>
+                                    <th class="px-4 py-3 text-xs">الحالة</th>
+                                    <th class="px-4 py-3 text-xs">الضربات</th>
+                                    <th class="px-4 py-3 text-xs">إدارة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="firewallRulesBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Live Traffic Monitor -->
+                <div class="cyber-card glass rounded-xl p-5 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-lg"><i class="fas fa-exchange-alt text-cyber-primary ml-2"></i>مراقبة حركة المرور المباشرة</h3>
+                        <div class="flex items-center gap-2">
+                            <span class="status-dot online"></span>
+                            <span class="text-xs text-cyber-accent">مباشر</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div>
+                            <div class="text-sm font-bold text-cyber-primary mb-2">الحزم الواردة</div>
+                            <div id="incomingTraffic" class="h-40 bg-cyber-darker rounded-lg p-3 overflow-y-auto font-mono text-xs space-y-1"></div>
+                        </div>
+                        <div>
+                            <div class="text-sm font-bold text-cyber-accent mb-2">الحزم الصادرة</div>
+                            <div id="outgoingTraffic" class="h-40 bg-cyber-darker rounded-lg p-3 overflow-y-auto font-mono text-xs space-y-1"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Blocked IPs -->
+                <div class="cyber-card glass rounded-xl p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-lg"><i class="fas fa-user-lock text-cyber-danger ml-2"></i>عناوين IP المحظورة</h3>
+                        <button onclick="showBlockIPModal()" class="cyber-btn px-4 py-2 bg-cyber-danger/20 text-cyber-danger rounded-lg hover:bg-cyber-danger/30 text-sm"><i class="fas fa-ban ml-1"></i>حظر IP</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full cyber-table">
+                            <thead>
+                                <tr class="text-right">
+                                    <th class="px-4 py-3 text-xs">IP</th>
+                                    <th class="px-4 py-3 text-xs">البلد</th>
+                                    <th class="px-4 py-3 text-xs">السبب</th>
+                                    <th class="px-4 py-3 text-xs">وقت الحظر</th>
+                                    <th class="px-4 py-3 text-xs">المحاولات</th>
+                                    <th class="px-4 py-3 text-xs">الإجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody id="blockedIPsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== INTRUSION DETECTION ==================== -->
+            <section id="intrusion" class="section-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-1">كشف التسلل IDS/IPS</h2>
+                    <p class="text-gray-400 text-sm">رصد محاولات الاختراق وتتبع المهاجمين</p>
+                </div>
+                
+                <!-- IDS Stats -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyber-danger" id="idsDetected">156</div>
+                        <div class="text-xs text-gray-400">محاولات اكتشفت</div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyber-warning" id="idsPrevented">143</div>
+                        <div class="text-xs text-gray-400">تم منعها</div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyber-accent" id="idsSignatures">12,450</div>
+                        <div class="text-xs text-gray-400">توقيعات نشطة</div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyber-primary" id="idsSensors">24</div>
+                        <div class="text-xs text-gray-400">حساسات نشطة</div>
+                    </div>
+                </div>
+                
+                <!-- Attack Signatures -->
+                <div class="cyber-card glass rounded-xl p-5 mb-6">
+                    <h3 class="font-bold text-lg mb-4"><i class="fas fa-fingerprint text-cyber-primary ml-2"></i>توقيعات الهجوم المكتشفة</h3>
+                    <div id="attackSignatures" class="space-y-2 max-h-80 overflow-y-auto"></div>
+                </div>
+                
+                <!-- Attacker Tracking -->
+                <div class="cyber-card glass rounded-xl p-5 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-lg"><i class="fas fa-user-secret text-cyber-danger ml-2"></i>تتبع المهاجمين</h3>
+                        <button onclick="refreshAttackerTracking()" class="cyber-btn px-3 py-1.5 bg-cyber-primary/20 text-cyber-primary rounded-lg text-xs"><i class="fas fa-sync-alt ml-1"></i>تحديث</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full cyber-table">
+                            <thead>
+                                <tr class="text-right">
+                                    <th class="px-4 py-3 text-xs">IP</th>
+                                    <th class="px-4 py-3 text-xs">البلد</th>
+                                    <th class="px-4 py-3 text-xs">ISP</th>
+                                    <th class="px-4 py-3 text-xs">أول ظهور</th>
+                                    <th class="px-4 py-3 text-xs">آخر نشاط</th>
+                                    <th class="px-4 py-3 text-xs">المحاولات</th>
+                                    <th class="px-4 py-3 text-xs">التقنيات</th>
+                                    <th class="px-4 py-3 text-xs">الحالة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attackerTrackingBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- MITRE ATT&CK Mapping -->
+                <div class="cyber-card glass rounded-xl p-5">
+                    <h3 class="font-bold text-lg mb-4"><i class="fas fa-chess-knight text-cyber-purple ml-2"></i>تخطيط MITRE ATT&CK</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="mitreTactics"></div>
+                </div>
+            </section>
+
+            <!-- ==================== THREAT INTELLIGENCE ==================== -->
+            <section id="threatIntel" class="section-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-1">مركز معلومات التهديدات</h2>
+                    <p class="text-gray-400 text-sm">إدارة IoCs وتقييم السمعة الأمنية</p>
+                </div>
+                
+                <!-- IOC Stats -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyber-danger" id="iocIPs">2,340</div>
+                        <div class="text-xs text-gray-400">IPs خبيثة</div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyber-warning" id="iocDomains">892</div>
+                        <div class="text-xs text-gray-400">نطاقات مشبوهة</div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyber-primary" id="iocHashes">5,678</div>
+                        <div class="text-xs text-gray-400">توقيعات ملفات</div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyber-accent" id="iocURLs">1,234</div>
+                        <div class="text-xs text-gray-400">روابط ضارة</div>
+                    </div>
+                </div>
+                
+                <!-- IOC Management -->
+                <div class="cyber-card glass rounded-xl p-5 mb-6">
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                        <h3 class="font-bold text-lg"><i class="fas fa-database text-cyber-primary ml-2"></i>قاعدة بيانات IoCs</h3>
+                        <div class="flex gap-2">
+                            <input type="text" id="iocSearch" class="cyber-input text-xs px-3 py-2 rounded-lg w-48" placeholder="بحث في IoCs..." onkeyup="searchIOCs()">
+                            <button onclick="showAddIOCModal()" class="cyber-btn px-4 py-2 bg-cyber-primary/20 text-cyber-primary rounded-lg hover:bg-cyber-primary/30 text-sm"><i class="fas fa-plus ml-1"></i>إضافة IoC</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full cyber-table">
+                            <thead>
+                                <tr class="text-right">
+                                    <th class="px-4 py-3 text-xs">النوع</th>
+                                    <th class="px-4 py-3 text-xs">القيمة</th>
+                                    <th class="px-4 py-3 text-xs">التهديد</th>
+                                    <th class="px-4 py-3 text-xs">الثقة</th>
+                                    <th class="px-4 py-3 text-xs">المصدر</th>
+                                    <th class="px-4 py-3 text-xs">تاريخ الإضافة</th>
+                                    <th class="px-4 py-3 text-xs">الحالة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="iocTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Reputation Check -->
+                <div class="cyber-card glass rounded-xl p-5">
+                    <h3 class="font-bold text-lg mb-4"><i class="fas fa-search-location text-cyber-primary ml-2"></i>فحص السمعة الأمنية</h3>
+                    <div class="flex gap-3 mb-4">
+                        <input type="text" id="reputationInput" class="cyber-input flex-1 px-4 py-3 rounded-lg" placeholder="أدخل IP أو Domain أو Hash للفحص...">
+                        <button onclick="checkReputation()" class="cyber-btn px-6 py-3 bg-gradient-to-r from-cyber-primary to-cyber-secondary text-white font-bold rounded-lg hover:shadow-lg hover:shadow-cyber-primary/30"><i class="fas fa-search ml-2"></i>فحص</button>
+                    </div>
+                    <div id="reputationResult" class="hidden p-4 rounded-xl bg-cyber-dark/50 border border-cyber-border"></div>
+                </div>
+            </section>
+            <!-- ==================== SECURITY SCANNER ==================== -->
+            <section id="scanner" class="section-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-1">فحص أمني للمواقع</h2>
+                    <p class="text-gray-400 text-sm">فحص رؤوس الحماية وSSL/TLS وتحليل إعدادات الأمان</p>
+                </div>
+                
+                <!-- Scan Input -->
+                <div class="cyber-card glass rounded-xl p-6 mb-6">
+                    <div class="text-center mb-6">
+                        <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-cyber-primary to-cyber-secondary flex items-center justify-center">
+                            <i class="fas fa-shield-virus text-4xl text-white"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">فحص شامل لأمان الموقع</h3>
+                        <p class="text-gray-400 text-sm">أدخل عنوان URL لإجراء فحص أمني كامل</p>
+                    </div>
+                    <div class="flex gap-3 max-w-2xl mx-auto">
+                        <input type="url" id="scanUrlInput" class="cyber-input flex-1 px-4 py-3 rounded-lg" placeholder="https://example.com">
+                        <button onclick="startSecurityScan()" class="cyber-btn px-8 py-3 bg-gradient-to-r from-cyber-primary to-cyber-secondary text-white font-bold rounded-lg hover:shadow-lg hover:shadow-cyber-primary/30">
+                            <i class="fas fa-search ml-2"></i>فحص
+                        </button>
+                    </div>
+                    <div class="flex flex-wrap justify-center gap-3 mt-4">
+                        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="cyber-checkbox" checked id="scanHeaders"><span class="text-sm">رؤوس الحماية</span></label>
+                        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="cyber-checkbox" checked id="scanSSL"><span class="text-sm">SSL/TLS</span></label>
+                        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="cyber-checkbox" checked id="scanPorts"><span class="text-sm">فحص المنافذ</span></label>
+                        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="cyber-checkbox" id="scanVulns"><span class="text-sm">الثغرات</span></label>
+                        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="cyber-checkbox" id="scanDNS"><span class="text-sm">DNS</span></label>
+                    </div>
+                </div>
+                
+                <!-- Scan Progress -->
+                <div id="scanProgress" class="hidden cyber-card glass rounded-xl p-5 mb-6">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-bold"><i class="fas fa-spinner fa-spin text-cyber-primary ml-2"></i>جاري الفحص...</h3>
+                        <span id="scanProgressPercent" class="text-cyber-primary font-mono">0%</span>
+                    </div>
+                    <div class="w-full bg-cyber-dark rounded-full h-3 mb-3"><div id="scanProgressBar" class="bg-gradient-to-r from-cyber-primary to-cyber-accent h-3 rounded-full transition-all duration-500" style="width:0%"></div></div>
+                    <div id="scanLog" class="h-32 bg-cyber-darker rounded-lg p-3 overflow-y-auto font-mono text-xs space-y-1 terminal-text"></div>
+                </div>
+                
+                <!-- Scan Results -->
+                <div id="scanResults" class="hidden space-y-4">
+                    <!-- Security Score -->
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-bold text-lg mb-1">نتيجة الفحص</h3>
+                                <p class="text-sm text-gray-400" id="scanTargetUrl">https://example.com</p>
+                            </div>
+                            <div class="text-center">
+                                <div class="score-ring mx-auto">
+                                    <svg width="120" height="120" viewBox="0 0 120 120">
+                                        <circle cx="60" cy="60" r="50" fill="none" stroke="#1e3a5f" stroke-width="8"/>
+                                        <circle id="scanScoreCircle" cx="60" cy="60" r="50" fill="none" stroke="#00d4ff" stroke-width="8" stroke-dasharray="314" stroke-dashoffset="78" stroke-linecap="round"/>
+                                    </svg>
+                                    <div class="score-value text-cyber-primary" id="scanScore">75</div>
+                                </div>
+                                <div class="text-sm text-gray-400 mt-1">درجة الأمان</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Security Headers -->
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <h3 class="font-bold text-lg mb-4"><i class="fas fa-heading text-cyber-primary ml-2"></i>رؤوس الحماية</h3>
+                        <div id="securityHeadersResult" class="space-y-2"></div>
+                    </div>
+                    
+                    <!-- SSL/TLS -->
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <h3 class="font-bold text-lg mb-4"><i class="fas fa-lock text-cyber-accent ml-2"></i>شهادة SSL/TLS</h3>
+                        <div id="sslResult" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+                    </div>
+                    
+                    <!-- Port Scan -->
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <h3 class="font-bold text-lg mb-4"><i class="fas fa-network-wired text-cyber-warning ml-2"></i>فحص المنافذ</h3>
+                        <div id="portScanResult" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+                    </div>
+                    
+                    <!-- Recommendations -->
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <h3 class="font-bold text-lg mb-4"><i class="fas fa-lightbulb text-cyber-gold ml-2"></i>التوصيات</h3>
+                        <div id="scanRecommendations" class="space-y-2"></div>
+                    </div>
+                    
+                    <!-- Export -->
+                    <div class="flex gap-3">
+                        <button onclick="exportScanReport('pdf')" class="cyber-btn px-4 py-2 bg-cyber-danger/20 text-cyber-danger rounded-lg hover:bg-cyber-danger/30 text-sm"><i class="fas fa-file-pdf ml-1"></i>تصدير PDF</button>
+                        <button onclick="exportScanReport('csv')" class="cyber-btn px-4 py-2 bg-cyber-accent/20 text-cyber-accent rounded-lg hover:bg-cyber-accent/30 text-sm"><i class="fas fa-file-csv ml-1"></i>تصدير CSV</button>
+                        <button onclick="exportScanReport('json')" class="cyber-btn px-4 py-2 bg-cyber-primary/20 text-cyber-primary rounded-lg hover:bg-cyber-primary/30 text-sm"><i class="fas fa-file-code ml-1"></i>تصدير JSON</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== VULNERABILITY MANAGEMENT ==================== -->
+            <section id="vulnerabilities" class="section-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-1">إدارة الثغرات الأمنية</h2>
+                    <p class="text-gray-400 text-sm">قاعدة بيانات الثغرات والمتابعة والإصلاح</p>
+                </div>
+                
+                <!-- Vuln Stats -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyber-danger" id="vulnCritical">3</div>
+                        <div class="text-xs text-gray-400">حرج</div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyber-warning" id="vulnHigh">8</div>
+                        <div class="text-xs text-gray-400">مرتفع</div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyber-gold" id="vulnMedium">24</div>
+                        <div class="text-xs text-gray-400">متوسط</div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyber-accent" id="vulnLow">56</div>
+                        <div class="text-xs text-gray-400">منخفض</div>
+                    </div>
+                </div>
+                
+                <!-- Vulnerability Table -->
+                <div class="cyber-card glass rounded-xl p-5 mb-6">
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                        <h3 class="font-bold text-lg"><i class="fas fa-bug text-cyber-primary ml-2"></i>قاعدة بيانات الثغرات</h3>
+                        <div class="flex gap-2">
+                            <input type="text" id="vulnSearch" class="cyber-input text-xs px-3 py-2 rounded-lg w-48" placeholder="بحث في الثغرات..." onkeyup="searchVulnerabilities()">
+                            <select id="vulnFilter" class="cyber-input text-xs px-3 py-2 rounded-lg" onchange="filterVulnerabilities()">
+                                <option value="all">جميع المستويات</option>
+                                <option value="critical">حرج</option>
+                                <option value="high">مرتفع</option>
+                                <option value="medium">متوسط</option>
+                                <option value="low">منخفض</option>
+                            </select>
+                            <button onclick="showAddVulnModal()" class="cyber-btn px-4 py-2 bg-cyber-primary/20 text-cyber-primary rounded-lg hover:bg-cyber-primary/30 text-sm"><i class="fas fa-plus ml-1"></i>إضافة</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full cyber-table">
+                            <thead>
+                                <tr class="text-right">
+                                    <th class="px-4 py-3 text-xs">CVE</th>
+                                    <th class="px-4 py-3 text-xs">الاسم</th>
+                                    <th class="px-4 py-3 text-xs">النظام</th>
+                                    <th class="px-4 py-3 text-xs">الخطورة</th>
+                                    <th class="px-4 py-3 text-xs">CVSS</th>
+                                    <th class="px-4 py-3 text-xs">الحالة</th>
+                                    <th class="px-4 py-3 text-xs">تاريخ الاكتشاف</th>
+                                    <th class="px-4 py-3 text-xs">إدارة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vulnTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Remediation Tracker -->
+                <div class="cyber-card glass rounded-xl p-5">
+                    <h3 class="font-bold text-lg mb-4"><i class="fas fa-tasks text-cyber-accent ml-2"></i>متابعة الإصلاحات</h3>
+                    <div id="remediationTracker" class="space-y-3"></div>
+                </div>
+            </section>
+
+            <!-- ==================== EMAIL ANALYZER ==================== -->
+            <section id="emailAnalyzer" class="section-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-1">تحليل البريد الإلكتروني</h2>
+                    <p class="text-gray-400 text-sm">كشف رسائل التصيد والبريد المشبوه وتحليل الرؤوس</p>
+                </div>
+                
+                <div class="cyber-card glass rounded-xl p-6 mb-6">
+                    <div class="text-center mb-6">
+                        <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-cyber-warning to-cyber-danger flex items-center justify-center">
+                            <i class="fas fa-envelope-open-text text-4xl text-white"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">تحليل رسالة بريد إلكتروني</h3>
+                        <p class="text-gray-400 text-sm">الصق رؤوس البريد أو محتوى الرسالة للتحليل</p>
+                    </div>
+                    <textarea id="emailInput" class="cyber-input w-full h-48 px-4 py-3 rounded-lg font-mono text-sm" placeholder="الصق رؤوس البريد هنا...
+Received: from mail.example.com
+From: sender@example.com
+To: victim@company.com
+Subject: Urgent Action Required...
+
+أو الصق محتوى الرسالة الكامل..."></textarea>
+                    <div class="flex gap-3 mt-4 justify-center">
+                        <button onclick="analyzeEmail()" class="cyber-btn px-8 py-3 bg-gradient-to-r from-cyber-warning to-cyber-danger text-white font-bold rounded-lg hover:shadow-lg hover:shadow-cyber-warning/30">
+                            <i class="fas fa-search ml-2"></i>تحليل الرسالة
+                        </button>
+                        <button onclick="document.getElementById('emailInput').value=''" class="cyber-btn px-4 py-3 bg-cyber-dark/50 text-gray-400 rounded-lg hover:text-white text-sm">
+                            <i class="fas fa-trash ml-1"></i>مسح
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Email Analysis Results -->
+                <div id="emailResults" class="hidden space-y-4">
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-lg"><i class="fas fa-shield-alt text-cyber-primary ml-2"></i>نتيجة التحليل</h3>
+                            <span id="emailRiskBadge" class="badge badge-high">مشبوه</span>
+                        </div>
+                        <div id="emailAnalysisDetails" class="space-y-3"></div>
+                    </div>
+                    
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <h3 class="font-bold text-lg mb-4"><i class="fas fa-link text-cyber-warning ml-2"></i>الروابط المكتشفة</h3>
+                        <div id="emailLinksFound" class="space-y-2"></div>
+                    </div>
+                    
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <h3 class="font-bold text-lg mb-4"><i class="fas fa-paperclip text-cyber-primary ml-2"></i>المرفقات</h3>
+                        <div id="emailAttachments" class="space-y-2"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== URL ANALYZER ==================== -->
+            <section id="urlAnalyzer" class="section-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-1">تحليل الروابط</h2>
+                    <p class="text-gray-400 text-sm">فحص الروابط المشبوهة وتقييم المخاطر</p>
+                </div>
+                
+                <div class="cyber-card glass rounded-xl p-6 mb-6">
+                    <div class="text-center mb-6">
+                        <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-cyber-primary to-cyber-purple flex items-center justify-center">
+                            <i class="fas fa-link text-4xl text-white"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">فحص الرابط</h3>
+                        <p class="text-gray-400 text-sm">أدخل الرابط للتحقق من سلامته</p>
+                    </div>
+                    <div class="flex gap-3 max-w-2xl mx-auto">
+                        <input type="url" id="urlInput" class="cyber-input flex-1 px-4 py-3 rounded-lg" placeholder="https://example.com/suspicious-link">
+                        <button onclick="analyzeURL()" class="cyber-btn px-8 py-3 bg-gradient-to-r from-cyber-primary to-cyber-purple text-white font-bold rounded-lg hover:shadow-lg hover:shadow-cyber-primary/30">
+                            <i class="fas fa-search ml-2"></i>فحص
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- URL Results -->
+                <div id="urlResults" class="hidden space-y-4">
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-lg"><i class="fas fa-shield-alt text-cyber-primary ml-2"></i>نتيجة الفحص</h3>
+                            <span id="urlRiskBadge" class="badge badge-high">خطر</span>
+                        </div>
+                        <div id="urlAnalysisDetails" class="space-y-3"></div>
+                    </div>
+                    
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <h3 class="font-bold text-lg mb-4"><i class="fas fa-globe text-cyber-primary ml-2"></i>معلومات النطاق</h3>
+                        <div id="urlDomainInfo" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+                    </div>
+                    
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <h3 class="font-bold text-lg mb-4"><i class="fas fa-history text-cyber-warning ml-2"></i>سجل التقارير</h3>
+                        <div id="urlReputationHistory" class="space-y-2"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== LOG ANALYZER ==================== -->
+            <section id="logAnalyzer" class="section-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-1">تحليل السجلات الأمنية</h2>
+                    <p class="text-gray-400 text-sm">رفع ملفات Log والبحث واكتشاف الأنشطة المشبوهة</p>
+                </div>
+                
+                <!-- Upload Zone -->
+                <div class="cyber-card glass rounded-xl p-6 mb-6">
+                    <div id="logUploadZone" class="upload-zone p-8 text-center" ondrop="handleLogDrop(event)" ondragover="event.preventDefault()" onclick="document.getElementById('logFileInput').click()">
+                        <input type="file" id="logFileInput" class="hidden" accept=".log,.txt,.csv" onchange="handleLogFile(event)">
+                        <i class="fas fa-cloud-upload-alt text-5xl text-cyber-primary mb-4"></i>
+                        <h3 class="text-lg font-bold mb-2">رفع ملف السجل</h3>
+                        <p class="text-gray-400 text-sm mb-2">اسحب الملف هنا أو انقر للاختيار</p>
+                        <p class="text-xs text-gray-500">يدعم: .log, .txt, .csv (Max 50MB)</p>
+                    </div>
+                </div>
+                
+                <!-- Log Analysis Tools -->
+                <div class="cyber-card glass rounded-xl p-5 mb-6">
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                        <h3 class="font-bold text-lg"><i class="fas fa-search text-cyber-primary ml-2"></i>أدوات التحليل</h3>
+                        <div class="flex gap-2">
+                            <input type="text" id="logSearch" class="cyber-input text-xs px-3 py-2 rounded-lg w-48" placeholder="بحث في السجلات..." onkeyup="searchLogs()">
+                            <select id="logFilter" class="cyber-input text-xs px-3 py-2 rounded-lg" onchange="filterLogs()">
+                                <option value="all">جميع المستويات</option>
+                                <option value="error">Error</option>
+                                <option value="warning">Warning</option>
+                                <option value="info">Info</option>
+                                <option value="debug">Debug</option>
+                            </select>
+                            <button onclick="detectAnomalies()" class="cyber-btn px-4 py-2 bg-cyber-warning/20 text-cyber-warning rounded-lg hover:bg-cyber-warning/30 text-sm"><i class="fas fa-exclamation-triangle ml-1"></i>كشف الشذوذ</button>
+                        </div>
+                    </div>
+                    <div id="logContent" class="h-96 bg-cyber-darker rounded-lg p-4 overflow-y-auto font-mono text-xs space-y-1 terminal-text"></div>
+                </div>
+                
+                <!-- Log Statistics -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <h3 class="font-bold text-sm mb-3"><i class="fas fa-chart-bar text-cyber-primary ml-2"></i>إحصائيات المستويات</h3>
+                        <div id="logStatsChart" class="h-40"><canvas id="logLevelChart"></canvas></div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <h3 class="font-bold text-sm mb-3"><i class="fas fa-clock text-cyber-accent ml-2"></i>النشاط الزمني</h3>
+                        <div id="logTimeChart" class="h-40"><canvas id="logTimelineChart"></canvas></div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <h3 class="font-bold text-sm mb-3"><i class="fas fa-bug text-cyber-danger ml-2"></i>الأخطاء المتكررة</h3>
+                        <div id="logErrorsList" class="space-y-2 max-h-40 overflow-y-auto"></div>
+                    </div>
+                </div>
+            </section/>
+            <!-- ==================== USERS & RBAC ==================== -->
+            <section id="users" class="section-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-1">إدارة المستخدمين والصلاحيات</h2>
+                    <p class="text-gray-400 text-sm">نظام صلاحيات RBAC وإدارة الجلسات</p>
+                </div>
+                
+                <!-- User Stats -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyber-primary" id="totalUsers">24</div>
+                        <div class="text-xs text-gray-400">إجمالي المستخدمين</div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyber-accent" id="activeUsers">18</div>
+                        <div class="text-xs text-gray-400">نشطون الآن</div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyber-warning" id="pendingUsers">3</div>
+                        <div class="text-xs text-gray-400">في انتظار الموافقة</div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyber-danger" id="lockedUsers">1</div>
+                        <div class="text-xs text-gray-400">حسابات مقفلة</div>
+                    </div>
+                </div>
+                
+                <!-- Users Table -->
+                <div class="cyber-card glass rounded-xl p-5 mb-6">
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                        <h3 class="font-bold text-lg"><i class="fas fa-users text-cyber-primary ml-2"></i>قائمة المستخدمين</h3>
+                        <div class="flex gap-2">
+                            <input type="text" id="userSearch" class="cyber-input text-xs px-3 py-2 rounded-lg w-48" placeholder="بحث..." onkeyup="searchUsers()">
+                            <button onclick="showAddUserModal()" class="cyber-btn px-4 py-2 bg-cyber-primary/20 text-cyber-primary rounded-lg hover:bg-cyber-primary/30 text-sm"><i class="fas fa-plus ml-1"></i>مستخدم جديد</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full cyber-table">
+                            <thead>
+                                <tr class="text-right">
+                                    <th class="px-4 py-3 text-xs">المستخدم</th>
+                                    <th class="px-4 py-3 text-xs">البريد</th>
+                                    <th class="px-4 py-3 text-xs">الدور</th>
+                                    <th class="px-4 py-3 text-xs">القسم</th>
+                                    <th class="px-4 py-3 text-xs">آخر دخول</th>
+                                    <th class="px-4 py-3 text-xs">MFA</th>
+                                    <th class="px-4 py-3 text-xs">الحالة</th>
+                                    <th class="px-4 py-3 text-xs">إدارة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Roles & Permissions -->
+                <div class="cyber-card glass rounded-xl p-5 mb-6">
+                    <h3 class="font-bold text-lg mb-4"><i class="fas fa-user-shield text-cyber-primary ml-2"></i>الأدوار والصلاحيات</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="rolesPermissions"></div>
+                </div>
+                
+                <!-- Active Sessions -->
+                <div class="cyber-card glass rounded-xl p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-lg"><i class="fas fa-desktop text-cyber-accent ml-2"></i>الجلسات النشطة</h3>
+                        <button onclick="terminateAllSessions()" class="cyber-btn px-4 py-2 bg-cyber-danger/20 text-cyber-danger rounded-lg hover:bg-cyber-danger/30 text-sm"><i class="fas fa-power-off ml-1"></i>إنهاء الكل</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full cyber-table">
+                            <thead>
+                                <tr class="text-right">
+                                    <th class="px-4 py-3 text-xs">المستخدم</th>
+                                    <th class="px-4 py-3 text-xs">IP</th>
+                                    <th class="px-4 py-3 text-xs">المتصفح</th>
+                                    <th class="px-4 py-3 text-xs">بدأت</th>
+                                    <th class="px-4 py-3 text-xs">المدة</th>
+                                    <th class="px-4 py-3 text-xs">إجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sessionsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== DATABASE ==================== -->
+            <section id="database" class="section-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-1">قاعدة البيانات</h2>
+                    <p class="text-gray-400 text-sm">PostgreSQL - تشفير البيانات والنسخ الاحتياطي</p>
+                </div>
+                
+                <!-- DB Stats -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyber-primary" id="dbTables">18</div>
+                        <div class="text-xs text-gray-400">الجداول</div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyber-accent" id="dbRecords">145,230</div>
+                        <div class="text-xs text-gray-400">السجلات</div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyber-warning" id="dbSize">2.4 GB</div>
+                        <div class="text-xs text-gray-400">الحجم</div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyber-info" id="dbUptime">99.9%</div>
+                        <div class="text-xs text-gray-400">التوفر</div>
+                    </div>
+                </div>
+                
+                <!-- Database Schema -->
+                <div class="cyber-card glass rounded-xl p-5 mb-6">
+                    <h3 class="font-bold text-lg mb-4"><i class="fas fa-sitemap text-cyber-primary ml-2"></i>هيكل قاعدة البيانات</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="dbSchema"></div>
+                </div>
+                
+                <!-- Backup & Encryption -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <h3 class="font-bold text-lg mb-4"><i class="fas fa-database text-cyber-accent ml-2"></i>النسخ الاحتياطي</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 rounded-lg bg-cyber-dark/50">
+                                <div><div class="text-sm font-bold">نسخة يومية تلقائية</div><div class="text-xs text-gray-500">02:00 AM - كل يوم</div></div>
+                                <input type="checkbox" class="cyber-toggle" checked>
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded-lg bg-cyber-dark/50">
+                                <div><div class="text-sm font-bold">نسخة أسبوعية</div><div class="text-xs text-gray-500">الأحد - 03:00 AM</div></div>
+                                <input type="checkbox" class="cyber-toggle" checked>
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded-lg bg-cyber-dark/50">
+                                <div><div class="text-sm font-bold">نسخة شهرية</div><div class="text-xs text-gray-500">أول يوم من الشهر</div></div>
+                                <input type="checkbox" class="cyber-toggle" checked>
+                            </div>
+                            <button onclick="triggerBackup()" class="cyber-btn w-full py-2 bg-cyber-primary/20 text-cyber-primary rounded-lg hover:bg-cyber-primary/30 text-sm"><i class="fas fa-play ml-1"></i>نسخ احتياطي يدوي الآن</button>
+                        </div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <h3 class="font-bold text-lg mb-4"><i class="fas fa-lock text-cyber-primary ml-2"></i>التشفير</h3>
+                        <div class="space-y-3">
+                            <div class="p-3 rounded-lg bg-cyber-dark/50">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-bold">تشفير البيانات الساكنة</span>
+                                    <span class="badge badge-info">AES-256</span>
+                                </div>
+                                <div class="text-xs text-gray-500">جميع البيانات الحساسة مشفرة</div>
+                            </div>
+                            <div class="p-3 rounded-lg bg-cyber-dark/50">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-bold">TLS للاتصالات</span>
+                                    <span class="badge badge-info">TLS 1.3</span>
+                                </div>
+                                <div class="text-xs text-gray-500">جميع الاتصالات مشفرة</div>
+                            </div>
+                            <div class="p-3 rounded-lg bg-cyber-dark/50">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-bold">تشفير كلمات المرور</span>
+                                    <span class="badge badge-info">bcrypt</span>
+                                </div>
+                                <div class="text-xs text-gray-500">Salt + Hash مع 12 دورة</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Audit Logs -->
+                <div class="cyber-card glass rounded-xl p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-lg"><i class="fas fa-clipboard-list text-cyber-warning ml-2"></i>سجلات التدقيق</h3>
+                        <div class="flex gap-2">
+                            <input type="text" class="cyber-input text-xs px-3 py-2 rounded-lg w-40" placeholder="بحث...">
+                            <button onclick="exportAuditLogs()" class="cyber-btn px-4 py-2 bg-cyber-accent/20 text-cyber-accent rounded-lg hover:bg-cyber-accent/30 text-sm"><i class="fas fa-download ml-1"></i>تصدير</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full cyber-table">
+                            <thead>
+                                <tr class="text-right">
+                                    <th class="px-4 py-3 text-xs">الوقت</th>
+                                    <th class="px-4 py-3 text-xs">المستخدم</th>
+                                    <th class="px-4 py-3 text-xs">الإجراء</th>
+                                    <th class="px-4 py-3 text-xs">الهدف</th>
+                                    <th class="px-4 py-3 text-xs">IP</th>
+                                    <th class="px-4 py-3 text-xs">النتيجة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="auditLogsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== API MANAGEMENT ==================== -->
+            <section id="api" class="section-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-1">واجهات API</h2>
+                    <p class="text-gray-400 text-sm">REST API كاملة مع JWT Authentication وRate Limiting</p>
+                </div>
+                
+                <!-- API Stats -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyber-primary" id="apiRequests">1.2M</div>
+                        <div class="text-xs text-gray-400">طلبات/يوم</div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyber-accent" id="apiSuccess">99.7%</div>
+                        <div class="text-xs text-gray-400">نسبة النجاح</div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyber-warning" id="apiRateLimited">45</div>
+                        <div class="text-xs text-gray-400">محدودة Rate</div>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyber-info" id="apiAvgResponse">45ms</div>
+                        <div class="text-xs text-gray-400">متوسط الاستجابة</div>
+                    </div>
+                </div>
+                
+                <!-- API Endpoints -->
+                <div class="cyber-card glass rounded-xl p-5 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-lg"><i class="fas fa-plug text-cyber-primary ml-2"></i>نقاط النهاية</h3>
+                        <button onclick="toggleAPIDocs()" class="cyber-btn px-4 py-2 bg-cyber-primary/20 text-cyber-primary rounded-lg hover:bg-cyber-primary/30 text-sm"><i class="fas fa-book ml-1"></i>التوثيق</button>
+                    </div>
+                    <div id="apiEndpoints" class="space-y-2"></div>
+                </div>
+                
+                <!-- Rate Limiting -->
+                <div class="cyber-card glass rounded-xl p-5 mb-6">
+                    <h3 class="font-bold text-lg mb-4"><i class="fas fa-tachometer-alt text-cyber-warning ml-2"></i>Rate Limiting</h3>
+                    <div id="rateLimitingConfig" class="space-y-3"></div>
+                </div>
+                
+                <!-- API Keys -->
+                <div class="cyber-card glass rounded-xl p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-lg"><i class="fas fa-key text-cyber-accent ml-2"></i>مفاتيح API</h3>
+                        <button onclick="generateAPIKey()" class="cyber-btn px-4 py-2 bg-cyber-accent/20 text-cyber-accent rounded-lg hover:bg-cyber-accent/30 text-sm"><i class="fas fa-plus ml-1"></i>مفتاح جديد</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full cyber-table">
+                            <thead>
+                                <tr class="text-right">
+                                    <th class="px-4 py-3 text-xs">الاسم</th>
+                                    <th class="px-4 py-3 text-xs">المفتاح</th>
+                                    <th class="px-4 py-3 text-xs">الصلاحيات</th>
+                                    <th class="px-4 py-3 text-xs">آخر استخدام</th>
+                                    <th class="px-4 py-3 text-xs">الحالة</th>
+                                    <th class="px-4 py-3 text-xs">إدارة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="apiKeysBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== REPORTS ==================== -->
+            <section id="reports" class="section-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-1">التقارير الأمنية</h2>
+                    <p class="text-gray-400 text-sm">تقارير تنفيذية وتقنية بصيغ متعددة</p>
+                </div>
+                
+                <!-- Report Templates -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                    <div class="cyber-card glass rounded-xl p-5 cursor-pointer hover:border-cyber-primary" onclick="generateReport('executive')">
+                        <div class="w-12 h-12 rounded-xl bg-cyber-primary/10 flex items-center justify-center mb-3"><i class="fas fa-file-alt text-cyber-primary text-xl"></i></div>
+                        <h3 class="font-bold mb-1">تقرير تنفيذي</h3>
+                        <p class="text-xs text-gray-400">ملخص شامل للإدارة العليا</p>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-5 cursor-pointer hover:border-cyber-accent" onclick="generateReport('technical')">
+                        <div class="w-12 h-12 rounded-xl bg-cyber-accent/10 flex items-center justify-center mb-3"><i class="fas fa-file-code text-cyber-accent text-xl"></i></div>
+                        <h3 class="font-bold mb-1">تقرير تقني</h3>
+                        <p class="text-xs text-gray-400">تفاصيل فنية للفريق الأمني</p>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-5 cursor-pointer hover:border-cyber-warning" onclick="generateReport('incident')">
+                        <div class="w-12 h-12 rounded-xl bg-cyber-warning/10 flex items-center justify-center mb-3"><i class="fas fa-file-medical-alt text-cyber-warning text-xl"></i></div>
+                        <h3 class="font-bold mb-1">تقرير حادث</h3>
+                        <p class="text-xs text-gray-400">توثيق حادث أمني محدد</p>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-5 cursor-pointer hover:border-cyber-danger" onclick="generateReport('compliance')">
+                        <div class="w-12 h-12 rounded-xl bg-cyber-danger/10 flex items-center justify-center mb-3"><i class="fas fa-file-contract text-cyber-danger text-xl"></i></div>
+                        <h3 class="font-bold mb-1">تقرير امتثال</h3>
+                        <p class="text-xs text-gray-400">ISO 27001, NIST, GDPR</p>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-5 cursor-pointer hover:border-cyber-purple" onclick="generateReport('monthly')">
+                        <div class="w-12 h-12 rounded-xl bg-cyber-purple/10 flex items-center justify-center mb-3"><i class="fas fa-calendar-alt text-cyber-purple text-xl"></i></div>
+                        <h3 class="font-bold mb-1">تقرير شهري</h3>
+                        <p class="text-xs text-gray-400">إحصائيات وتحليلات شهرية</p>
+                    </div>
+                    <div class="cyber-card glass rounded-xl p-5 cursor-pointer hover:border-cyber-info" onclick="generateReport('custom')">
+                        <div class="w-12 h-12 rounded-xl bg-cyber-info/10 flex items-center justify-center mb-3"><i class="fas fa-cogs text-cyber-info text-xl"></i></div>
+                        <h3 class="font-bold mb-1">تقرير مخصص</h3>
+                        <p class="text-xs text-gray-400">إنشاء تقرير حسب الطلب</p>
+                    </div>
+                </div>
+                
+                <!-- Report History -->
+                <div class="cyber-card glass rounded-xl p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-lg"><i class="fas fa-history text-cyber-primary ml-2"></i>سجل التقارير</h3>
+                        <div class="flex gap-2">
+                            <select class="cyber-input text-xs px-3 py-2 rounded-lg">
+                                <option>جميع الأنواع</option>
+                                <option>تنفيذي</option>
+                                <option>تقني</option>
+                                <option>حوادث</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full cyber-table">
+                            <thead>
+                                <tr class="text-right">
+                                    <th class="px-4 py-3 text-xs">الاسم</th>
+                                    <th class="px-4 py-3 text-xs">النوع</th>
+                                    <th class="px-4 py-3 text-xs">تاريخ الإنشاء</th>
+                                    <th class="px-4 py-3 text-xs">الحجم</th>
+                                    <th class="px-4 py-3 text-xs">الصيغة</th>
+                                    <th class="px-4 py-3 text-xs">إجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportsHistoryBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SETTINGS ==================== -->
+            <section id="settings" class="section-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-1">إعدادات النظام</h2>
+                    <p class="text-gray-400 text-sm">إعدادات الأمان والحماية البرمجية</p>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <!-- Security Settings -->
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <h3 class="font-bold text-lg mb-4"><i class="fas fa-shield-alt text-cyber-primary ml-2"></i>إعدادات الأمان</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-3 rounded-lg bg-cyber-dark/50">
+                                <div><div class="text-sm font-bold">XSS Protection</div><div class="text-xs text-gray-500">حماية من هجمات XSS</div></div>
+                                <input type="checkbox" class="cyber-toggle" checked>
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded-lg bg-cyber-dark/50">
+                                <div><div class="text-sm font-bold">CSRF Protection</div><div class="text-xs text-gray-500">حماية من هجمات CSRF</div></div>
+                                <input type="checkbox" class="cyber-toggle" checked>
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded-lg bg-cyber-dark/50">
+                                <div><div class="text-sm font-bold">SQL Injection Protection</div><div class="text-xs text-gray-500">حماية من حقن SQL</div></div>
+                                <input type="checkbox" class="cyber-toggle" checked>
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded-lg bg-cyber-dark/50">
+                                <div><div class="text-sm font-bold">Input Validation</div><div class="text-xs text-gray-500">التحقق من المدخلات</div></div>
+                                <input type="checkbox" class="cyber-toggle" checked>
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded-lg bg-cyber-dark/50">
+                                <div><div class="text-sm font-bold">Content Security Policy</div><div class="text-xs text-gray-500">سياسة أمان المحتوى</div></div>
+                                <input type="checkbox" class="cyber-toggle" checked>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- MFA Settings -->
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <h3 class="font-bold text-lg mb-4"><i class="fas fa-fingerprint text-cyber-accent ml-2"></i>المصادقة متعددة العوامل</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-3 rounded-lg bg-cyber-dark/50">
+                                <div><div class="text-sm font-bold">تفعيل MFA</div><div class="text-xs text-gray-500">لجميع المستخدمين</div></div>
+                                <input type="checkbox" class="cyber-toggle" checked>
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded-lg bg-cyber-dark/50">
+                                <div><div class="text-sm font-bold">TOTP (Google Authenticator)</div><div class="text-xs text-gray-500">رمز لمرة واحدة</div></div>
+                                <input type="checkbox" class="cyber-toggle" checked>
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded-lg bg-cyber-dark/50">
+                                <div><div class="text-sm font-bold">SMS Verification</div><div class="text-xs text-gray-500">التحقق عبر الرسائل</div></div>
+                                <input type="checkbox" class="cyber-toggle">
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded-lg bg-cyber-dark/50">
+                                <div><div class="text-sm font-bold">Email Verification</div><div class="text-xs text-gray-500">التحقق عبر البريد</div></div>
+                                <input type="checkbox" class="cyber-toggle" checked>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Session Settings -->
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <h3 class="font-bold text-lg mb-4"><i class="fas fa-clock text-cyber-warning ml-2"></i>إعدادات الجلسات</h3>
+                        <div class="space-y-4">
+                            <div class="p-3 rounded-lg bg-cyber-dark/50">
+                                <div class="flex justify-between mb-2"><span class="text-sm font-bold">مدة الجلسة</span><span class="text-cyber-primary font-mono">30 دقيقة</span></div>
+                                <input type="range" min="5" max="120" value="30" class="w-full accent-cyber-primary" oninput="this.previousElementSibling.querySelector('.font-mono').textContent=this.value+' دقيقة'">
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded-lg bg-cyber-dark/50">
+                                <div><div class="text-sm font-bold">قفل الحساب</div><div class="text-xs text-gray-500">بعد 5 محاولات فاشلة</div></div>
+                                <input type="checkbox" class="cyber-toggle" checked>
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded-lg bg-cyber-dark/50">
+                                <div><div class="text-sm font-bold">إشعار تسجيل الدخول</div><div class="text-xs text-gray-500">إرسال بريد عند تسجيل دخول جديد</div></div>
+                                <input type="checkbox" class="cyber-toggle" checked>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Security Headers -->
+                    <div class="cyber-card glass rounded-xl p-5">
+                        <h3 class="font-bold text-lg mb-4"><i class="fas fa-heading text-cyber-primary ml-2"></i>رؤوس الأمان</h3>
+                        <div class="space-y-2" id="securityHeadersConfig"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== PROFILE ==================== -->
+            <section id="profile" class="section-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-1">الملف الشخصي</h2>
+                    <p class="text-gray-400 text-sm">إدارة الحساب والأمان</p>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div class="cyber-card glass rounded-xl p-5 text-center">
+                        <div class="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-cyber-primary to-cyber-purple flex items-center justify-center text-white text-3xl font-bold mb-4" id="profileAvatar">A</div>
+                        <h3 class="font-bold text-lg" id="profileName">Admin</h3>
+                        <p class="text-sm text-gray-400" id="profileRole">مدير النظام</p>
+                        <div class="mt-4 space-y-2 text-sm">
+                            <div class="flex justify-between"><span class="text-gray-500">البريد:</span><span id="profileEmail">admin@cybershield.com</span></div>
+                            <div class="flex justify-between"><span class="text-gray-500">آخر دخول:</span><span>2024-06-26 08:30</span></div>
+                            <div class="flex justify-between"><span class="text-gray-500">MFA:</span><span class="text-cyber-accent"><i class="fas fa-check-circle"></i> مفعل</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="lg:col-span-2 space-y-4">
+                        <div class="cyber-card glass rounded-xl p-5">
+                            <h3 class="font-bold text-lg mb-4"><i class="fas fa-key text-cyber-primary ml-2"></i>تغيير كلمة المرور</h3>
+                            <div class="space-y-3">
+                                <input type="password" class="cyber-input w-full px-4 py-3 rounded-lg" placeholder="كلمة المرور الحالية">
+                                <input type="password" class="cyber-input w-full px-4 py-3 rounded-lg" placeholder="كلمة المرور الجديدة">
+                                <input type="password" class="cyber-input w-full px-4 py-3 rounded-lg" placeholder="تأكيد كلمة المرور">
+                                <button onclick="changePassword()" class="cyber-btn px-6 py-2 bg-cyber-primary/20 text-cyber-primary rounded-lg hover:bg-cyber-primary/30 text-sm"><i class="fas fa-save ml-1"></i>حفظ</button>
+                            </div>
+                        </div>
+                        
+                        <div class="cyber-card glass rounded-xl p-5">
+                            <h3 class="font-bold text-lg mb-4"><i class="fas fa-history text-cyber-warning ml-2"></i>سجل النشاط</h3>
+                            <div id="profileActivity" class="space-y-2 max-h-48 overflow-y-auto"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ==================== MODALS ==================== -->
+    <!-- Add Rule Modal -->
+    <div id="addRuleModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-overlay">
+        <div class="glass rounded-2xl p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold"><i class="fas fa-plus text-cyber-primary ml-2"></i>قاعدة جدار ناري جديدة</h3>
+                <button onclick="closeModal('addRuleModal')" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div><label class="block text-sm text-gray-400 mb-1">اسم القاعدة</label><input type="text" id="ruleName" class="cyber-input w-full px-4 py-2 rounded-lg" placeholder="مثال: حظر IP روسيا"></div>
+                <div><label class="block text-sm text-gray-400 mb-1">المصدر (IP/CIDR)</label><input type="text" id="ruleSource" class="cyber-input w-full px-4 py-2 rounded-lg" placeholder="0.0.0.0/0 أو 192.168.1.1"></div>
+                <div><label class="block text-sm text-gray-400 mb-1">الوجهة</label><input type="text" id="ruleDest" class="cyber-input w-full px-4 py-2 rounded-lg" placeholder="any أو IP محدد"></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-sm text-gray-400 mb-1">البروتوكول</label><select id="ruleProtocol" class="cyber-input w-full px-4 py-2 rounded-lg"><option>TCP</option><option>UDP</option><option>ICMP</option><option>Any</option></select></div>
+                    <div><label class="block text-sm text-gray-400 mb-1">المنفذ</label><input type="text" id="rulePort" class="cyber-input w-full px-4 py-2 rounded-lg" placeholder="80,443 أو any"></div>
+                </div>
+                <div><label class="block text-sm text-gray-400 mb-1">الإجراء</label><select id="ruleAction" class="cyber-input w-full px-4 py-2 rounded-lg"><option value="allow">سماح (Allow)</option><option value="deny">حظر (Deny)</option><option value="log">تسجيل فقط (Log)</option></select></div>
+                <div class="flex gap-3 pt-2">
+                    <button onclick="saveFirewallRule()" class="cyber-btn flex-1 py-2 bg-cyber-primary/20 text-cyber-primary rounded-lg hover:bg-cyber-primary/30"><i class="fas fa-save ml-1"></i>حفظ</button>
+                    <button onclick="closeModal('addRuleModal')" class="cyber-btn flex-1 py-2 bg-cyber-dark/50 text-gray-400 rounded-lg hover:text-white">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Block IP Modal -->
+    <div id="blockIPModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-overlay">
+        <div class="glass rounded-2xl p-6 w-full max-w-md mx-4">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-cyber-danger"><i class="fas fa-ban ml-2"></i>حظر عنوان IP</h3>
+                <button onclick="closeModal('blockIPModal')" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div><label class="block text-sm text-gray-400 mb-1">عنوان IP</label><input type="text" id="blockIPInput" class="cyber-input w-full px-4 py-2 rounded-lg" placeholder="192.168.1.100"></div>
+                <div><label class="block text-sm text-gray-400 mb-1">السبب</label><select id="blockReason" class="cyber-input w-full px-4 py-2 rounded-lg"><option>هجوم Brute Force</option><option>نشاط مشبوه</option><option>هجوم DDoS</option><option>محاولة اختراق</option><option>سبب آخر</option></select></div>
+                <div><label class="block text-sm text-gray-400 mb-1">المدة</label><select id="blockDuration" class="cyber-input w-full px-4 py-2 rounded-lg"><option value="1h">1 ساعة</option><option value="24h">24 ساعة</option><option value="7d">7 أيام</option><option value="30d">30 يوم</option><option value="permanent">دائم</option></select></div>
+                <div class="flex gap-3 pt-2">
+                    <button onclick="confirmBlockIP()" class="cyber-btn flex-1 py-2 bg-cyber-danger/20 text-cyber-danger rounded-lg hover:bg-cyber-danger/30"><i class="fas fa-ban ml-1"></i>حظر</button>
+                    <button onclick="closeModal('blockIPModal')" class="cyber-btn flex-1 py-2 bg-cyber-dark/50 text-gray-400 rounded-lg hover:text-white">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div id="addUserModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-overlay">
+        <div class="glass rounded-2xl p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold"><i class="fas fa-user-plus text-cyber-primary ml-2"></i>مستخدم جديد</h3>
+                <button onclick="closeModal('addUserModal')" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div><label class="block text-sm text-gray-400 mb-1">الاسم الكامل</label><input type="text" id="newUserName" class="cyber-input w-full px-4 py-2 rounded-lg" placeholder="محمد أحمد"></div>
+                <div><label class="block text-sm text-gray-400 mb-1">اسم المستخدم</label><input type="text" id="newUserUsername" class="cyber-input w-full px-4 py-2 rounded-lg" placeholder="mohamed.ahmed"></div>
+                <div><label class="block text-sm text-gray-400 mb-1">البريد الإلكتروني</label><input type="email" id="newUserEmail" class="cyber-input w-full px-4 py-2 rounded-lg" placeholder="mohamed@company.com"></div>
+                <div><label class="block text-sm text-gray-400 mb-1">الدور</label><select id="newUserRole" class="cyber-input w-full px-4 py-2 rounded-lg"><option value="admin">مدير النظام</option><option value="analyst">محلل أمني</option><option value="viewer">مراقب فقط</option></select></div>
+                <div><label class="block text-sm text-gray-400 mb-1">القسم</label><input type="text" id="newUserDept" class="cyber-input w-full px-4 py-2 rounded-lg" placeholder="قسم الأمن السيبراني"></div>
+                <div><label class="block text-sm text-gray-400 mb-1">كلمة المرور</label><input type="password" id="newUserPassword" class="cyber-input w-full px-4 py-2 rounded-lg" placeholder="••••••••"></div>
+                <div class="flex items-center gap-2"><input type="checkbox" class="cyber-checkbox" id="newUserMFA" checked><span class="text-sm text-gray-400">تفعيل MFA</span></div>
+                <div class="flex gap-3 pt-2">
+                    <button onclick="saveNewUser()" class="cyber-btn flex-1 py-2 bg-cyber-primary/20 text-cyber-primary rounded-lg hover:bg-cyber-primary/30"><i class="fas fa-save ml-1"></i>إنشاء</button>
+                    <button onclick="closeModal('addUserModal')" class="cyber-btn flex-1 py-2 bg-cyber-dark/50 text-gray-400 rounded-lg hover:text-white">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add IOC Modal -->
+    <div id="addIOCModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-overlay">
+        <div class="glass rounded-2xl p-6 w-full max-w-lg mx-4">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold"><i class="fas fa-plus text-cyber-primary ml-2"></i>إضافة IoC</h3>
+                <button onclick="closeModal('addIOCModal')" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div><label class="block text-sm text-gray-400 mb-1">النوع</label><select id="iocType" class="cyber-input w-full px-4 py-2 rounded-lg"><option value="ip">IP Address</option><option value="domain">Domain</option><option value="hash">File Hash</option><option value="url">URL</option><option value="email">Email</option></select></div>
+                <div><label class="block text-sm text-gray-400 mb-1">القيمة</label><input type="text" id="iocValue" class="cyber-input w-full px-4 py-2 rounded-lg" placeholder="192.168.1.100"></div>
+                <div><label class="block text-sm text-gray-400 mb-1">اسم التهديد</label><input type="text" id="iocThreat" class="cyber-input w-full px-4 py-2 rounded-lg" placeholder="مثال: Emotet C2"></div>
+                <div><label class="block text-sm text-gray-400 mb-1">مستوى الثقة</label><select id="iocConfidence" class="cyber-input w-full px-4 py-2 rounded-lg"><option value="high">مرتفع (90-100%)</option><option value="medium">متوسط (70-89%)</option><option value="low">منخفض (50-69%)</option></select></div>
+                <div><label class="block text-sm text-gray-400 mb-1">المصدر</label><input type="text" id="iocSource" class="cyber-input w-full px-4 py-2 rounded-lg" placeholder="مثال: VirusTotal, AlienVault"></div>
+                <div class="flex gap-3 pt-2">
+                    <button onclick="saveIOC()" class="cyber-btn flex-1 py-2 bg-cyber-primary/20 text-cyber-primary rounded-lg hover:bg-cyber-primary/30"><i class="fas fa-save ml-1"></i>حفظ</button>
+                    <button onclick="closeModal('addIOCModal')" class="cyber-btn flex-1 py-2 bg-cyber-dark/50 text-gray-400 rounded-lg hover:text-white">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Vulnerability Modal -->
+    <div id="addVulnModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-overlay">
+        <div class="glass rounded-2xl p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold"><i class="fas fa-bug text-cyber-danger ml-2"></i>إضافة ثغرة</h3>
+                <button onclick="closeModal('addVulnModal')" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div><label class="block text-sm text-gray-400 mb-1">CVE ID</label><input type="text" id="vulnCVE" class="cyber-input w-full px-4 py-2 rounded-lg" placeholder="CVE-2024-XXXX"></div>
+                <div><label class="block text-sm text-gray-400 mb-1">الاسم</label><input type="text" id="vulnName" class="cyber-input w-full px-4 py-2 rounded-lg" placeholder="Remote Code Execution in Apache"></div>
+                <div><label class="block text-sm text-gray-400 mb-1">النظام المتأثر</label><input type="text" id="vulnSystem" class="cyber-input w-full px-4 py-2 rounded-lg" placeholder="Apache HTTP Server 2.4.x"></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-sm text-gray-400 mb-1">الخطورة</label><select id="vulnSeverity" class="cyber-input w-full px-4 py-2 rounded-lg"><option value="critical">حرج</option><option value="high">مرتفع</option><option value="medium">متوسط</option><option value="low">منخفض</option></select></div>
+                    <div><label class="block text-sm text-gray-400 mb-1">درجة CVSS</label><input type="number" id="vulnCVSS" class="cyber-input w-full px-4 py-2 rounded-lg" placeholder="0.0 - 10.0" min="0" max="10" step="0.1"></div>
+                </div>
+                <div><label class="block text-sm text-gray-400 mb-1">الوصف</label><textarea id="vulnDesc" class="cyber-input w-full px-4 py-2 rounded-lg h-20" placeholder="وصف الثغرة..."></textarea></div>
+                <div><label class="block text-sm text-gray-400 mb-1">الحل المقترح</label><textarea id="vulnSolution" class="cyber-input w-full px-4 py-2 rounded-lg h-20" placeholder="التحديث إلى الإصدار..."></textarea></div>
+                <div class="flex gap-3 pt-2">
+                    <button onclick="saveVulnerability()" class="cyber-btn flex-1 py-2 bg-cyber-danger/20 text-cyber-danger rounded-lg hover:bg-cyber-danger/30"><i class="fas fa-save ml-1"></i>حفظ</button>
+                    <button onclick="closeModal('addVulnModal')" class="cyber-btn flex-1 py-2 bg-cyber-dark/50 text-gray-400 rounded-lg hover:text-white">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== JAVASCRIPT ==================== -->
+    <script>
+            const system = document.getElementById('vulnSystem').value;
+            const severity = document.getElementById('vulnSeverity').value;
+            const cvss = document.getElementById('vulnCVSS').value;
+            const desc = document.getElementById('vulnDesc').value;
+            const solution = document.getElementById('vulnSolution').value;
+            
+            if (!cve || !name) { showToast('error', 'يرجى ملء الحقول المطلوبة'); return; }
+            
+            db.vulnerabilities.unshift({
+                cve, name, system, severity, cvss: parseFloat(cvss) || 5.0,
+                status: 'open', discovered: getCurrentDate(), solution
+            });
+            closeModal('addVulnModal');
+            loadVulnerabilities();
+            showToast('success', 'تم إضافة الثغرة بنجاح');
+            
+            document.getElementById('vulnCVE').value = '';
+            document.getElementById('vulnName').value = '';
+            document.getElementById('vulnSystem').value = '';
+            document.getElementById('vulnCVSS').value = '';
+            document.getElementById('vulnDesc').value = '';
+            document.getElementById('vulnSolution').value = '';
+        }
+
+        function viewVuln(cve) { showToast('info', 'عرض تفاصيل الثغرة: ' + cve); }
+        function markVulnResolved(cve) {
+            const v = db.vulnerabilities.find(v => v.cve === cve);
+            if (v) { v.status = 'resolved'; loadVulnerabilities(); showToast('success', 'تم حل الثغرة ' + cve); }
+        }
+
+        // ==================== EMAIL ANALYZER ====================
+        function analyzeEmail() {
+            const content = document.getElementById('emailInput').value;
+            if (!content.trim()) { showToast('error', 'يرجى إدخال محتوى البريد'); return; }
+            
+            document.getElementById('emailResults').classList.remove('hidden');
+            
+            const isPhishing = content.toLowerCase().includes('urgent') || content.toLowerCase().includes('verify') || 
+                              content.toLowerCase().includes('suspended') || content.toLowerCase().includes('click here') ||
+                              content.toLowerCase().includes('password') || content.includes('http://');
+            
+            const riskLevel = isPhishing ? 'high' : 'low';
+            const riskText = isPhishing ? 'مشبوه - احتمال تصيد' : 'آمن';
+            const riskBadge = isPhishing ? 'badge-high' : 'badge-low';
+            
+            document.getElementById('emailRiskBadge').className = 'badge ' + riskBadge;
+            document.getElementById('emailRiskBadge').textContent = riskText;
+            
+            // Extract headers
+            const fromMatch = content.match(/From:\s*(.+)/i);
+            const toMatch = content.match(/To:\s*(.+)/i);
+            const subjectMatch = content.match(/Subject:\s*(.+)/i);
+            const dateMatch = content.match(/Date:\s*(.+)/i);
+            const spfMatch = content.match(/Received-SPF:\s*(.+)/i);
+            const dkimMatch = content.match(/DKIM-Signature:/i);
+            const dmarcMatch = content.match(/DMARC:/i);
+            
+            const checks = [
+                {name:'SPF Record', status: spfMatch ? 'pass' : 'fail', desc: spfMatch ? 'تم التحقق من SPF' : 'لا يوجد SPF'},
+                {name:'DKIM Signature', status: dkimMatch ? 'pass' : 'fail', desc: dkimMatch ? 'تم التحقق من DKIM' : 'لا يوجد DKIM'},
+                {name:'DMARC Policy', status: dmarcMatch ? 'pass' : 'warning', desc: dmarcMatch ? 'DMARC مفعل' : 'لا يوجد DMARC'},
+                {name:'HTTPS Links', status: content.includes('https://') ? 'pass' : 'warning', desc: 'الروابط تستخدم HTTPS'},
+                {name:'Suspicious Keywords', status: isPhishing ? 'fail' : 'pass', desc: isPhishing ? 'تم العثور على كلمات مشبوهة' : 'لا توجد كلمات مشبوهة'},
+                {name:'Sender Domain', status: fromMatch && fromMatch[1].includes('@') ? 'pass' : 'warning', desc: 'النطاق يبدو صالحاً'}
+            ];
+            
+            document.getElementById('emailAnalysisDetails').innerHTML = `
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="p-3 rounded-lg bg-cyber-dark/50"><div class="text-xs text-gray-500">المرسل</div><div class="text-sm font-mono">${fromMatch ? fromMatch[1] : 'غير معروف'}</div></div>
+                    <div class="p-3 rounded-lg bg-cyber-dark/50"><div class="text-xs text-gray-500">المستلم</div><div class="text-sm font-mono">${toMatch ? toMatch[1] : 'غير معروف'}</div></div>
+                    <div class="p-3 rounded-lg bg-cyber-dark/50"><div class="text-xs text-gray-500">الموضوع</div><div class="text-sm">${subjectMatch ? subjectMatch[1] : 'غير معروف'}</div></div>
+                    <div class="p-3 rounded-lg bg-cyber-dark/50"><div class="text-xs text-gray-500">التاريخ</div><div class="text-sm">${dateMatch ? dateMatch[1] : 'غير معروف'}</div></div>
+                </div>
+                <div class="space-y-2">
+                    ${checks.map(c => `
+                        <div class="flex items-center justify-between p-3 rounded-lg ${c.status === 'pass' ? 'bg-cyber-accent/5 border border-cyber-accent/30' : c.status === 'fail' ? 'bg-cyber-danger/5 border border-cyber-danger/30' : 'bg-cyber-warning/5 border border-cyber-warning/30'}">
+                            <div class="flex items-center gap-3">
+                                <i class="fas ${c.status === 'pass' ? 'fa-check-circle text-cyber-accent' : c.status === 'fail' ? 'fa-times-circle text-cyber-danger' : 'fa-exclamation-triangle text-cyber-warning'}"></i>
+                                <div><div class="text-sm font-bold">${c.name}</div><div class="text-xs text-gray-500">${c.desc}</div></div>
+                            </div>
+                            <span class="badge ${c.status === 'pass' ? 'badge-low' : c.status === 'fail' ? 'badge-critical' : 'badge-medium'}">${c.status === 'pass' ? 'آمن' : c.status === 'fail' ? 'خطر' : 'تحذير'}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            // Extract links
+            const links = content.match(/https?:\/\/[^\s\)]+/g) || [];
+            document.getElementById('emailLinksFound').innerHTML = links.length > 0 ? links.map(l => `
+                <div class="flex items-center justify-between p-2 rounded-lg bg-cyber-dark/50">
+                    <div class="text-xs font-mono truncate flex-1">${l}</div>
+                    <button onclick="analyzeURLFromEmail('${l}')" class="text-cyber-primary hover:text-white text-xs mr-2"><i class="fas fa-search"></i> فحص</button>
+                </div>
+            `).join('') : '<div class="text-sm text-gray-500 text-center">لا توجد روابط</div>';
+            
+            // Attachments
+            const attachments = content.match(/filename="([^"]+)"/g) || [];
+            document.getElementById('emailAttachments').innerHTML = attachments.length > 0 ? attachments.map(a => {
+                const filename = a.replace('filename="', '').replace('"', '');
+                const ext = filename.split('.').pop().toLowerCase();
+                const isDangerous = ['exe', 'bat', 'cmd', 'scr', 'js', 'vbs', 'ps1', 'zip'].includes(ext);
+                return `
+                    <div class="flex items-center justify-between p-2 rounded-lg ${isDangerous ? 'bg-cyber-danger/5 border border-cyber-danger/30' : 'bg-cyber-dark/50'}">
+                        <div class="flex items-center gap-2">
+                            <i class="fas ${isDangerous ? 'fa-exclamation-triangle text-cyber-danger' : 'fa-file text-cyber-primary'}"></i>
+                            <span class="text-xs">${filename}</span>
+                        </div>
+                        <span class="badge ${isDangerous ? 'badge-critical' : 'badge-info'}">${isDangerous ? 'خطر!' : 'آمن'}</span>
+                    </div>
+                `;
+            }).join('') : '<div class="text-sm text-gray-500 text-center">لا توجد مرفقات</div>';
+            
+            showToast('success', 'تم تحليل البريد الإلكتروني');
+        }
+
+        function analyzeURLFromEmail(url) {
+            document.getElementById('urlInput').value = url;
+            showSection('urlAnalyzer');
+            analyzeURL();
+        }
+
+        // ==================== URL ANALYZER ====================
+        function analyzeURL() {
+            const url = document.getElementById('urlInput').value;
+            if (!url) { showToast('error', 'يرجى إدخال الرابط'); return; }
+            
+            document.getElementById('urlResults').classList.remove('hidden');
+            
+            const isMalicious = url.includes('evil') || url.includes('fake') || url.includes('phishing') || 
+                               url.includes('suspicious') || url.includes('malware') || url.includes('http://');
+            
+            const riskLevel = isMalicious ? 'high' : 'low';
+            const riskText = isMalicious ? 'خطر - لا تفتح!' : 'آمن';
+            const riskBadge = isMalicious ? 'badge-critical' : 'badge-low';
+            
+            document.getElementById('urlRiskBadge').className = 'badge ' + riskBadge;
+            document.getElementById('urlRiskBadge').textContent = riskText;
+            
+            const domain = url.replace(/^https?:\/\//, '').split('/')[0];
+            
+            document.getElementById('urlAnalysisDetails').innerHTML = `
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="p-3 rounded-lg bg-cyber-dark/50"><div class="text-xs text-gray-500">الرابط الأصلي</div><div class="text-xs font-mono break-all">${url}</div></div>
+                    <div class="p-3 rounded-lg bg-cyber-dark/50"><div class="text-xs text-gray-500">النطاق</div><div class="text-sm font-mono">${domain}</div></div>
+                    <div class="p-3 rounded-lg bg-cyber-dark/50"><div class="text-xs text-gray-500">البروتوكول</div><div class="text-sm">${url.startsWith('https') ? 'HTTPS (آمن)' : 'HTTP (غير آمن)'}</div></div>
+                    <div class="p-3 rounded-lg bg-cyber-dark/50"><div class="text-xs text-gray-500">السمعة</div><div class="text-sm ${isMalicious ? 'text-cyber-danger' : 'text-cyber-accent'}">${isMalicious ? 'سيئة - 12/15 مصدر يصنفه خطر' : 'جيدة - 0/15 مصدر يصنفه خطر'}</div></div>
+                </div>
+                <div class="mt-3 p-3 rounded-lg ${isMalicious ? 'bg-cyber-danger/10 border border-cyber-danger/30' : 'bg-cyber-accent/10 border border-cyber-accent/30'}">
+                    <div class="flex items-center gap-2">
+                        <i class="fas ${isMalicious ? 'fa-exclamation-triangle text-cyber-danger' : 'fa-check-circle text-cyber-accent'}"></i>
+                        <span class="text-sm font-bold">${isMalicious ? 'تحذير: هذا الرابط مشبوه!' : 'هذا الرابط يبدو آمناً'}</span>
+                    </div>
+                    <div class="text-xs text-gray-400 mt-1">${isMalicious ? 'تم الإبلاغ عن هذا الرابط كمصدر للبرمجيات الخبيثة أو التصيد الاحتيالي.' : 'لم يتم العثور على أي تقارير سلبية حول هذا الرابط.'}</div>
+                </div>
+            `;
+            
+            document.getElementById('urlDomainInfo').innerHTML = `
+                <div class="p-3 rounded-lg bg-cyber-dark/50"><div class="text-xs text-gray-500">تاريخ التسجيل</div><div class="text-sm">${isMalicious ? '2024-06-01 (حديث جداً!)' : '2018-03-15'}</div></div>
+                <div class="p-3 rounded-lg bg-cyber-dark/50"><div class="text-xs text-gray-500">تاريخ الانتهاء</div><div class="text-sm">2025-06-01</div></div>
+                <div class="p-3 rounded-lg bg-cyber-dark/50"><div class="text-xs text-gray-500">المُسجِّل</div><div class="text-sm">${isMalicious ? 'NameCheap (مخفي)' : 'GoDaddy LLC'}</div></div>
+                <div class="p-3 rounded-lg bg-cyber-dark/50"><div class="text-xs text-gray-500">DNS Servers</div><div class="text-sm font-mono">ns1.cloudflare.com<br>ns2.cloudflare.com</div></div>
+                <div class="p-3 rounded-lg bg-cyber-dark/50"><div class="text-xs text-gray-500">IP Address</div><div class="text-sm font-mono">104.21.45.128</div></div>
+                <div class="p-3 rounded-lg bg-cyber-dark/50"><div class="text-xs text-gray-500">الموقع</div><div class="text-sm">الولايات المتحدة</div></div>
+            `;
+            
+            document.getElementById('urlReputationHistory').innerHTML = `
+                <div class="flex items-center justify-between p-2 rounded-lg bg-cyber-dark/50">
+                    <div class="text-xs">VirusTotal</div>
+                    <span class="badge ${isMalicious ? 'badge-critical' : 'badge-low'}">${isMalicious ? '12/90 مكتشف' : '0/90 مكتشف'}</span>
+                </div>
+                <div class="flex items-center justify-between p-2 rounded-lg bg-cyber-dark/50">
+                    <div class="text-xs">Google Safe Browsing</div>
+                    <span class="badge ${isMalicious ? 'badge-critical' : 'badge-low'}">${isMalicious ? 'خطر' : 'آمن'}</span>
+                </div>
+                <div class="flex items-center justify-between p-2 rounded-lg bg-cyber-dark/50">
+                    <div class="text-xs">PhishTank</div>
+                    <span class="badge ${isMalicious ? 'badge-critical' : 'badge-low'}">${isMalicious ? 'مُبلَّغ عنه' : 'غير مُبلَّغ'}</span>
+                </div>
+                <div class="flex items-center justify-between p-2 rounded-lg bg-cyber-dark/50">
+                    <div class="text-xs">URLhaus</div>
+                    <span class="badge ${isMalicious ? 'badge-critical' : 'badge-low'}">${isMalicious ? 'مالوير' : 'نظيف'}</span>
+                </div>
+            `;
+            
+            showToast('success', 'تم تحليل الرابط');
+        }
+
+        // ==================== LOG ANALYZER ====================
+        let logData = [];
+        
+        function handleLogDrop(e) {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            if (file) processLogFile(file);
+        }
+        
+        function handleLogFile(e) {
+            const file = e.target.files[0];
+            if (file) processLogFile(file);
+        }
+        
+        function processLogFile(file) {
+            showToast('info', 'جاري معالجة ملف السجل: ' + file.name);
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                parseLogContent(content);
+                showToast('success', 'تم تحميل الملف بنجاح - ' + file.name);
+            };
+            reader.readAsText(file);
+        }
+        
+        function parseLogContent(content) {
+            const lines = content.split('\\n').filter(l => l.trim());
+            logData = lines.map((line, i) => {
+                let level = 'info';
+                if (line.includes('ERROR') || line.includes('CRITICAL') || line.includes('FATAL')) level = 'error';
+                else if (line.includes('WARN')) level = 'warning';
+                else if (line.includes('DEBUG')) level = 'debug';
+                return {id: i, line, level, time: new Date().toISOString()};
+            });
+            
+            displayLogs();
+            updateLogCharts();
+        }
+        
+        function displayLogs() {
+            const container = document.getElementById('logContent');
+            container.innerHTML = logData.map(l => `
+                <div class="log-entry ${l.level} p-2 rounded" data-level="${l.level}">
+                    <span class="text-gray-500">[${l.time.split('T')[1].split('.')[0]}]</span>
+                    <span class="${l.level === 'error' ? 'text-cyber-danger' : l.level === 'warning' ? 'text-cyber-warning' : l.level === 'debug' ? 'text-cyber-info' : 'text-gray-300'}">${l.line.substring(0, 200)}${l.line.length > 200 ? '...' : ''}</span>
+                </div>
+            `).join('');
+        }
+        
+        function searchLogs() {
+            const search = document.getElementById('logSearch').value.toLowerCase();
+            const entries = document.querySelectorAll('#logContent .log-entry');
+            entries.forEach(entry => {
+                entry.style.display = entry.textContent.toLowerCase().includes(search) ? '' : 'none';
+            });
+        }
+        
+        function filterLogs() {
+            const filter = document.getElementById('logFilter').value;
+            const entries = document.querySelectorAll('#logContent .log-entry');
+            entries.forEach(entry => {
+                const level = entry.getAttribute('data-level');
+                entry.style.display = filter === 'all' || level === filter ? '' : 'none';
+            });
+        }
+        
+        function detectAnomalies() {
+            showToast('info', 'جاري تحليل السجلات للكشف عن الشذوذ...');
+            
+            // Simulate anomaly detection
+            const anomalies = [
+                'اكتشاف محاولات تسجيل دخول فاشلة متكررة من IP: 185.220.101.42',
+                'اكتشاف نشاط غير طبيعي في الساعة 03:00 AM',
+                'اكتشاف محاولة الوصول إلى ملفات حساسة',
+                'اكتشاف استهلاك غير طبيعي للموارد'
+            ];
+            
+            setTimeout(() => {
+                showToast('warning', 'تم اكتشاف ' + anomalies.length + ' حالات شاذة');
+                const container = document.getElementById('logContent');
+                anomalies.forEach(a => {
+                    const div = document.createElement('div');
+                    div.className = 'log-entry critical p-2 rounded bg-cyber-danger/10';
+                    div.innerHTML = `<span class="text-cyber-danger font-bold">[ANOMALY DETECTED]</span> <span class="text-cyber-danger">${a}</span>`;
+                    container.insertBefore(div, container.firstChild);
+                });
+            }, 1500);
+        }
+        
+        function updateLogCharts() {
+            const counts = {error: 0, warning: 0, info: 0, debug: 0};
+            logData.forEach(l => counts[l.level]++);
+            
+            // If no data, use demo data
+            if (logData.length === 0) {
+                counts.error = 12; counts.warning = 28; counts.info = 156; counts.debug = 45;
+            }
+            
+            const ctx = document.getElementById('logLevelChart').getContext('2d');
+            if (charts.logLevel) charts.logLevel.destroy();
+            charts.logLevel = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Error', 'Warning', 'Info', 'Debug'],
+                    datasets: [{
+                        data: [counts.error, counts.warning, counts.info, counts.debug],
+                        backgroundColor: ['#ff3366', '#ff9500', '#00d4ff', '#6b8cff'],
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {legend: {display: false}},
+                    scales: {
+                        x: {ticks: {color: '#9ca3af', font: {family: 'Cairo'}}, grid: {display: false}},
+                        y: {ticks: {color: '#9ca3af', font: {family: 'Cairo'}}, grid: {color: 'rgba(30,58,95,0.3)'}}
+                    }
+                }
+            });
+            
+            // Timeline chart
+            const timelineCtx = document.getElementById('logTimelineChart').getContext('2d');
+            if (charts.logTimeline) charts.logTimeline.destroy();
+            charts.logTimeline = new Chart(timelineCtx, {
+                type: 'line',
+                data: {
+                    labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                    datasets: [{
+                        label: 'الأحداث',
+                        data: [15, 8, 45, 78, 52, 35],
+                        borderColor: '#00d4ff',
+                        backgroundColor: 'rgba(0,212,255,0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {legend: {display: false}},
+                    scales: {
+                        x: {ticks: {color: '#9ca3af', font: {family: 'Cairo'}}, grid: {color: 'rgba(30,58,95,0.3)'}},
+                        y: {ticks: {color: '#9ca3af', font: {family: 'Cairo'}}, grid: {color: 'rgba(30,58,95,0.3)'}}
+                    }
+                }
+            });
+            
+            // Errors list
+            const errors = logData.filter(l => l.level === 'error').slice(0, 5);
+            if (errors.length === 0) {
+                document.getElementById('logErrorsList').innerHTML = `
+                    <div class="p-2 rounded-lg bg-cyber-dark/50"><div class="text-xs text-cyber-danger">Connection timeout to database</div><div class="text-xs text-gray-500">15 مرة</div></div>
+                    <div class="p-2 rounded-lg bg-cyber-dark/50"><div class="text-xs text-cyber-danger">Authentication failed for user admin</div><div class="text-xs text-gray-500">8 مرات</div></div>
+                    <div class="p-2 rounded-lg bg-cyber-dark/50"><div class="text-xs text-cyber-danger">SSL handshake failed</div><div class="text-xs text-gray-500">3 مرات</div></div>
+                `;
+            } else {
+                document.getElementById('logErrorsList').innerHTML = errors.map(e => `
+                    <div class="p-2 rounded-lg bg-cyber-dark/50">
+                        <div class="text-xs text-cyber-danger">${e.line.substring(0, 80)}</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // ==================== USERS ====================
+        function loadUsers() {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = db.users.map(u => `
+                <tr class="border-b border-cyber-border/50 hover:bg-cyber-dark/30 transition-colors">
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyber-primary to-cyber-purple flex items-center justify-center text-white text-xs font-bold">${u.name.charAt(0)}</div>
+                            <div><div class="text-sm font-bold">${u.name}</div><div class="text-xs text-gray-500">@${u.username}</div></div>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 text-xs">${u.email}</td>
+                    <td class="px-4 py-3"><span class="badge ${u.role === 'admin' ? 'badge-critical' : u.role === 'analyst' ? 'badge-high' : 'badge-info'}">${getRoleName(u.role)}</span></td>
+                    <td class="px-4 py-3 text-xs">${u.dept}</td>
+                    <td class="px-4 py-3 text-xs">${u.lastLogin}</td>
+                    <td class="px-4 py-3"><i class="fas ${u.mfa ? 'fa-check-circle text-cyber-accent' : 'fa-times-circle text-gray-500'}"></i></td>
+                    <td class="px-4 py-3"><span class="status-dot ${u.status === 'active' ? 'online' : 'offline'}"></span></td>
+                    <td class="px-4 py-3">
+                        <button onclick="editUser(${u.id})" class="text-cyber-primary hover:text-white text-xs ml-2"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteUser(${u.id})" class="text-cyber-danger hover:text-white text-xs"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            // Roles
+            document.getElementById('rolesPermissions').innerHTML = `
+                <div class="p-4 rounded-xl bg-cyber-dark/50 border border-cyber-border/50">
+                    <div class="flex items-center gap-2 mb-3"><i class="fas fa-crown text-cyber-danger"></i><h4 class="font-bold">مدير النظام</h4></div>
+                    <div class="space-y-1 text-xs text-gray-400">
+                        <div><i class="fas fa-check text-cyber-accent ml-1"></i>لوحة التحكم الكاملة</div>
+                        <div><i class="fas fa-check text-cyber-accent ml-1"></i>إدارة المستخدمين</div>
+                        <div><i class="fas fa-check text-cyber-accent ml-1"></i>إعدادات النظام</div>
+                        <div><i class="fas fa-check text-cyber-accent ml-1"></i>التقارير</div>
+                        <div><i class="fas fa-check text-cyber-accent ml-1"></i>قاعدة البيانات</div>
+                    </div>
+                </div>
+                <div class="p-4 rounded-xl bg-cyber-dark/50 border border-cyber-border/50">
+                    <div class="flex items-center gap-2 mb-3"><i class="fas fa-user-shield text-cyber-warning"></i><h4 class="font-bold">محلل أمني</h4></div>
+                    <div class="space-y-1 text-xs text-gray-400">
+                        <div><i class="fas fa-check text-cyber-accent ml-1"></i>مركز SOC</div>
+                        <div><i class="fas fa-check text-cyber-accent ml-1"></i>فحص الثغرات</div>
+                        <div><i class="fas fa-check text-cyber-accent ml-1"></i>تحليل السجلات</div>
+                        <div><i class="fas fa-check text-cyber-accent ml-1"></i>ذكاء التهديدات</div>
+                        <div><i class="fas fa-times text-gray-600 ml-1"></i>إدارة المستخدمين</div>
+                    </div>
+                </div>
+                <div class="p-4 rounded-xl bg-cyber-dark/50 border border-cyber-border/50">
+                    <div class="flex items-center gap-2 mb-3"><i class="fas fa-eye text-cyber-info"></i><h4 class="font-bold">مراقب فقط</h4></div>
+                    <div class="space-y-1 text-xs text-gray-400">
+                        <div><i class="fas fa-check text-cyber-accent ml-1"></i>عرض التقارير</div>
+                        <div><i class="fas fa-check text-cyber-accent ml-1"></i>لوحة التحكم (قراءة)</div>
+                        <div><i class="fas fa-times text-gray-600 ml-1"></i>تعديل الإعدادات</div>
+                        <div><i class="fas fa-times text-gray-600 ml-1"></i>إدارة المستخدمين</div>
+                        <div><i class="fas fa-times text-gray-600 ml-1"></i>قاعدة البيانات</div>
+                    </div>
+                </div>
+            `;
+            
+            // Sessions
+            document.getElementById('sessionsTableBody').innerHTML = db.sessions.map(s => `
+                <tr class="border-b border-cyber-border/50 hover:bg-cyber-dark/30 transition-colors">
+                    <td class="px-4 py-3 text-sm">${s.user}</td>
+                    <td class="px-4 py-3 text-xs font-mono">${s.ip}</td>
+                    <td class="px-4 py-3 text-xs">${s.browser}</td>
+                    <td class="px-4 py-3 text-xs">${s.start}</td>
+                    <td class="px-4 py-3 text-xs">${s.duration}</td>
+                    <td class="px-4 py-3"><button onclick="terminateSession('${s.user}')" class="text-cyber-danger hover:text-white text-xs"><i class="fas fa-times-circle"></i> إنهاء</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function searchUsers() {
+            const search = document.getElementById('userSearch').value.toLowerCase();
+            const rows = document.querySelectorAll('#usersTableBody tr');
+            rows.forEach(row => { row.style.display = row.textContent.toLowerCase().includes(search) ? '' : 'none'; });
+        }
+
+        function saveNewUser() {
+            const name = document.getElementById('newUserName').value;
+            const username = document.getElementById('newUserUsername').value;
+            const email = document.getElementById('newUserEmail').value;
+            const role = document.getElementById('newUserRole').value;
+            const dept = document.getElementById('newUserDept').value;
+            const password = document.getElementById('newUserPassword').value;
+            const mfa = document.getElementById('newUserMFA').checked;
+            
+            if (!name || !username || !email || !password) { showToast('error', 'يرجى ملء جميع الحقول المطلوبة'); return; }
+            
+            db.users.push({
+                id: db.users.length + 1, name, username, email, role, dept,
+                lastLogin: 'لم يسبق له الدخول', mfa, status: 'active', password
+            });
+            closeModal('addUserModal');
+            loadUsers();
+            showToast('success', 'تم إنشاء المستخدم بنجاح');
+            
+            document.getElementById('newUserName').value = '';
+            document.getElementById('newUserUsername').value = '';
+            document.getElementById('newUserEmail').value = '';
+            document.getElementById('newUserDept').value = '';
+            document.getElementById('newUserPassword').value = '';
+        }
+
+        function editUser(id) { showToast('info', 'جاري تحميل بيانات المستخدم...'); }
+        function deleteUser(id) {
+            if (confirm('هل أنت متأكد من حذف هذا المستخدم؟')) {
+                db.users = db.users.filter(u => u.id !== id);
+                loadUsers();
+                showToast('success', 'تم حذف المستخدم');
+            }
+        }
+        function terminateSession(user) { showToast('success', 'تم إنهاء جلسة: ' + user); }
+        function terminateAllSessions() {
+            if (confirm('هل أنت متأكد من إنهاء جميع الجلسات؟')) {
+                showToast('success', 'تم إنهاء جميع الجلسات');
+            }
+        }
+
+        // ==================== DATABASE ====================
+        function loadDatabase() {
+            const tables = [
+                {name:'users', records:24, size:'2.1 MB', lastUpdate:'2024-06-26 09:45'},
+                {name:'alerts', records:1247, size:'15.6 MB', lastUpdate:'2024-06-26 09:50'},
+                {name:'firewall_rules', records:8, size:'45 KB', lastUpdate:'2024-06-26 08:30'},
+                {name:'blocked_ips', records:45, size:'12 KB', lastUpdate:'2024-06-26 09:42'},
+                {name:'iocs', records:2340, size:'8.9 MB', lastUpdate:'2024-06-26 09:00'},
+                {name:'vulnerabilities', records:89, size:'1.2 MB', lastUpdate:'2024-06-26 08:00'},
+                {name:'audit_logs', records:45678, size:'45.2 MB', lastUpdate:'2024-06-26 09:52'},
+                {name:'sessions', records:18, size:'89 KB', lastUpdate:'2024-06-26 09:50'},
+                {name:'reports', records:156, size:'4.5 MB', lastUpdate:'2024-06-25 23:00'},
+                {name:'api_keys', records:12, size:'34 KB', lastUpdate:'2024-06-26 07:00'},
+                {name:'threat_intel', records:5678, size:'23.4 MB', lastUpdate:'2024-06-26 06:00'},
+                {name:'network_logs', records:234567, size:'234.5 MB', lastUpdate:'2024-06-26 09:55'}
+            ];
+            
+            document.getElementById('dbSchema').innerHTML = tables.map(t => `
+                <div class="db-table">
+                    <div class="db-table-header flex items-center justify-between">
+                        <span><i class="fas fa-table ml-2"></i>${t.name}</span>
+                        <span class="text-xs">${t.records.toLocaleString()} سجل</span>
+                    </div>
+                    <div class="db-table-row flex justify-between">
+                        <span class="text-gray-500">الحجم:</span>
+                        <span>${t.size}</span>
+                    </div>
+                    <div class="db-table-row flex justify-between">
+                        <span class="text-gray-500">آخر تحديث:</span>
+                        <span>${t.lastUpdate}</span>
+                    </div>
+                    <div class="db-table-row flex justify-between">
+                        <span class="text-gray-500">التشفير:</span>
+                        <span class="text-cyber-accent">AES-256</span>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Audit logs
+            document.getElementById('auditLogsBody').innerHTML = db.auditLogs.map(l => `
+                <tr class="border-b border-cyber-border/50 hover:bg-cyber-dark/30 transition-colors">
+                    <td class="px-4 py-3 text-xs font-mono">${l.time}</td>
+                    <td class="px-4 py-3 text-xs">${l.user}</td>
+                    <td class="px-4 py-3 text-xs">${l.action}</td>
+                    <td class="px-4 py-3 text-xs">${l.target}</td>
+                    <td class="px-4 py-3 text-xs font-mono">${l.ip}</td>
+                    <td class="px-4 py-3 text-xs ${l.result === 'نجاح' ? 'text-cyber-accent' : 'text-cyber-danger'}">${l.result}</td>
+                </tr>
+            `).join('');
+        }
+
+        function triggerBackup() {
+            showToast('info', 'جاري إنشاء نسخة احتياطية...');
+            setTimeout(() => showToast('success', 'تم إنشاء النسخة الاحتياطية بنجاح'), 2000);
+        }
+        function exportAuditLogs() { showToast('success', 'تم تصدير سجلات التدقيق'); }
+
+        // ==================== API ====================
+        function loadAPI() {
+            const endpoints = [
+                {method:'GET', path:'/api/v1/threats', desc:'جلب قائمة التهديدات', auth:'JWT', rate:'100/min'},
+                {method:'GET', path:'/api/v1/threats/:id', desc:'جلب تفاصيل تهديد', auth:'JWT', rate:'100/min'},
+                {method:'POST', path:'/api/v1/threats', desc:'إضافة تهديد جديد', auth:'JWT', rate:'50/min'},
+                {method:'PUT', path:'/api/v1/threats/:id', desc:'تحديث تهديد', auth:'JWT', rate:'50/min'},
+                {method:'DELETE', path:'/api/v1/threats/:id', desc:'حذف تهديد', auth:'JWT', rate:'20/min'},
+                {method:'GET', path:'/api/v1/alerts', desc:'جلب التنبيهات', auth:'JWT', rate:'200/min'},
+                {method:'POST', path:'/api/v1/alerts', desc:'إنشاء تنبيه', auth:'JWT', rate:'100/min'},
+                {method:'GET', path:'/api/v1/iocs', desc:'جلب IoCs', auth:'JWT', rate:'100/min'},
+                {method:'POST', path:'/api/v1/iocs', desc:'إضافة IoC', auth:'JWT', rate:'50/min'},
+                {method:'GET', path:'/api/v1/scan', desc:'فحص موقع', auth:'API Key', rate:'10/min'},
+                {method:'POST', path:'/api/v1/scan', desc:'بدء فحص', auth:'API Key', rate:'5/min'},
+                {method:'GET', path:'/api/v1/reports', desc:'جلب التقارير', auth:'JWT', rate:'50/min'}
+            ];
+            
+            document.getElementById('apiEndpoints').innerHTML = endpoints.map(e => `
+                <div class="api-endpoint ${e.method.toLowerCase()} p-3 rounded-lg bg-cyber-dark/50 flex items-center justify-between hover:bg-cyber-dark/70 transition-colors cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <span class="badge ${e.method === 'GET' ? 'badge-low' : e.method === 'POST' ? 'badge-info' : e.method === 'PUT' ? 'badge-medium' : 'badge-critical'} font-mono">${e.method}</span>
+                        <div>
+                            <div class="text-sm font-mono">${e.path}</div>
+                            <div class="text-xs text-gray-500">${e.desc}</div>
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-500 text-right">
+                        <div>${e.auth}</div>
+                        <div>${e.rate}</div>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Rate limiting
+            document.getElementById('rateLimitingConfig').innerHTML = `
+                <div class="p-3 rounded-lg bg-cyber-dark/50">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-bold">JWT Authentication</span>
+                        <span class="text-xs text-cyber-accent">مفعل</span>
+                    </div>
+                    <div class="text-xs text-gray-500 mb-2">100 طلب/دقيقة لكل مستخدم</div>
+                    <div class="rate-bar"><div class="rate-bar-fill bg-cyber-primary" style="width:35%"></div></div>
+                </div>
+                <div class="p-3 rounded-lg bg-cyber-dark/50">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-bold">API Key</span>
+                        <span class="text-xs text-cyber-accent">مفعل</span>
+                    </div>
+                    <div class="text-xs text-gray-500 mb-2">1000 طلب/ساعة لكل مفتاح</div>
+                    <div class="rate-bar"><div class="rate-bar-fill bg-cyber-accent" style="width:12%"></div></div>
+                </div>
+                <div class="p-3 rounded-lg bg-cyber-dark/50">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-bold">IP Rate Limit</span>
+                        <span class="text-xs text-cyber-accent">مفعل</span>
+                    </div>
+                    <div class="text-xs text-gray-500 mb-2">500 طلب/دقيقة لكل IP</div>
+                    <div class="rate-bar"><div class="rate-bar-fill bg-cyber-warning" style="width:45%"></div></div>
+                </div>
+            `;
+            
+            // API Keys
+            document.getElementById('apiKeysBody').innerHTML = `
+                <tr class="border-b border-cyber-border/50">
+                    <td class="px-4 py-3 text-sm">Production API</td>
+                    <td class="px-4 py-3 text-xs font-mono">sk_live_••••••••••••••••••••••</td>
+                    <td class="px-4 py-3 text-xs">Read, Write</td>
+                    <td class="px-4 py-3 text-xs">2024-06-26 09:30</td>
+                    <td class="px-4 py-3"><span class="status-dot online"></span></td>
+                    <td class="px-4 py-3"><button class="text-cyber-danger hover:text-white text-xs"><i class="fas fa-trash"></i></button></td>
+                </tr>
+                <tr class="border-b border-cyber-border/50">
+                    <td class="px-4 py-3 text-sm">Development API</td>
+                    <td class="px-4 py-3 text-xs font-mono">sk_dev_••••••••••••••••••••••</td>
+                    <td class="px-4 py-3 text-xs">Read Only</td>
+                    <td class="px-4 py-3 text-xs">2024-06-26 08:15</td>
+                    <td class="px-4 py-3"><span class="status-dot online"></span></td>
+                    <td class="px-4 py-3"><button class="text-cyber-danger hover:text-white text-xs"><i class="fas fa-trash"></i></button></td>
+                </tr>
+            `;
+        }
+
+        function toggleAPIDocs() { showToast('info', 'جاري فتح التوثيق...'); }
+        function generateAPIKey() {
+            showToast('success', 'تم إنشاء مفتاح API جديد: sk_live_' + Math.random().toString(36).substring(2, 15));
+            loadAPI();
+        }
+
+        // ==================== REPORTS ====================
+        function loadReports() {
+            document.getElementById('reportsHistoryBody').innerHTML = db.reports.map(r => `
+                <tr class="border-b border-cyber-border/50 hover:bg-cyber-dark/30 transition-colors">
+                    <td class="px-4 py-3 text-sm">${r.name}</td>
+                    <td class="px-4 py-3"><span class="badge ${r.type === 'تنفيذي' ? 'badge-info' : r.type === 'تقني' ? 'badge-primary' : r.type === 'حادث' ? 'badge-critical' : 'badge-medium'}">${r.type}</span></td>
+                    <td class="px-4 py-3 text-xs">${r.date}</td>
+                    <td class="px-4 py-3 text-xs">${r.size}</td>
+                    <td class="px-4 py-3 text-xs">${r.format}</td>
+                    <td class="px-4 py-3">
+                        <button onclick="downloadReport('${r.name}')" class="text-cyber-primary hover:text-white text-xs ml-2"><i class="fas fa-download"></i></button>
+                        <button onclick="previewReport('${r.name}')" class="text-cyber-accent hover:text-white text-xs"><i class="fas fa-eye"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function generateReport(type) {
+            showToast('info', 'جاري إنشاء التقرير: ' + type);
+            setTimeout(() => {
+                db.reports.unshift({
+                    name: 'تقرير ' + type + ' - ' + getCurrentDate(),
+                    type: type === 'executive' ? 'تنفيذي' : type === 'technical' ? 'تقني' : type === 'incident' ? 'حادث' : type === 'compliance' ? 'امتثال' : type === 'monthly' ? 'شهري' : 'مخصص',
+                    date: getCurrentDate(),
+                    size: (Math.random() * 5 + 1).toFixed(1) + ' MB',
+                    format: 'PDF'
+                });
+                loadReports();
+                showToast('success', 'تم إنشاء التقرير بنجاح');
+            }, 2000);
+        }
+
+        function downloadReport(name) { showToast('success', 'جاري تحميل: ' + name); }
+        function previewReport(name) { showToast('info', 'جاري عرض: ' + name); }
+
+        // ==================== SETTINGS ====================
+        function loadSettings() {
+            const headers = [
+                {name:'X-Frame-Options', value:'DENY', desc:'منع التضمين في iframe'},
+                {name:'X-Content-Type-Options', value:'nosniff', desc:'منع sniffing'},
+                {name:'X-XSS-Protection', value:'1; mode=block', desc:'حماية XSS'},
+                {name:'Strict-Transport-Security', value:'max-age=31536000', desc:'HSTS'},
+                {name:'Content-Security-Policy', value:"default-src 'self'", desc:'CSP'},
+                {name:'Referrer-Policy', value:'strict-origin-when-cross-origin', desc:'Referrer Policy'}
+            ];
+            
+            document.getElementById('securityHeadersConfig').innerHTML = headers.map(h => `
+                <div class="flex items-center justify-between p-3 rounded-lg bg-cyber-dark/50">
+                    <div>
+                        <div class="text-sm font-bold">${h.name}</div>
+                        <div class="text-xs text-gray-500">${h.desc}</div>
+                        <div class="text-xs font-mono text-cyber-primary mt-1">${h.value}</div>
+                    </div>
+                    <input type="checkbox" class="cyber-toggle" checked>
+                </div>
+            `).join('');
+        }
+
+        function changePassword() { showToast('success', 'تم تغيير كلمة المرور بنجاح'); }
+
+        // ==================== PROFILE ====================
+        function loadProfile() {
+            document.getElementById('profileActivity').innerHTML = db.auditLogs.filter(l => l.user === currentUser?.name).map(l => `
+                <div class="flex items-center gap-3 p-2 rounded-lg bg-cyber-dark/50">
+                    <i class="fas fa-circle text-cyber-primary text-xs"></i>
+                    <div class="flex-1">
+                        <div class="text-sm">${l.action}</div>
+                        <div class="text-xs text-gray-500">${l.target} - ${l.time}</div>
+                    </div>
+                </div>
+            `).join('') || '<div class="text-sm text-gray-500 text-center">لا يوجد نشاط</div>';
+        }
+
+        // ==================== LIVE UPDATES ====================
+        function startLiveUpdates() {
+            liveInterval = setInterval(() => {
+                // Update random stats
+                const threats = parseInt(document.getElementById('totalThreats').textContent.replace(',', ''));
+                if (Math.random() > 0.7) {
+                    document.getElementById('totalThreats').textContent = (threats + 1).toLocaleString();
+                }
+                
+                // Update network stats
+                const packets = 145000 + Math.floor(Math.random() * 10000);
+                document.querySelector('.fa-tachometer-alt').parentElement.nextElementSibling.textContent = packets.toLocaleString() + ' pps';
+                
+                // Randomly show critical alert
+                if (Math.random() > 0.995) {
+                    document.getElementById('criticalAlertBanner').classList.remove('hidden');
+                }
+            }, 3000);
+        }
+
+        // ==================== UTILITY FUNCTIONS ====================
+        function getCurrentTime() {
+            const now = new Date();
+            return now.toISOString().replace('T', ' ').substring(0, 19);
+        }
+
+        function getCurrentDate() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        // ==================== MATRIX RAIN EFFECT ====================
+        (function() {
+            const canvas = document.getElementById('matrixCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+            const fontSize = 14;
+            const columns = canvas.width / fontSize;
+            const drops = [];
+            
+            for (let i = 0; i < columns; i++) drops[i] = Math.random() * -100;
+            
+            function draw() {
+                ctx.fillStyle = 'rgba(10, 14, 26, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#00d4ff';
+                ctx.font = fontSize + 'px monospace';
+                
+                for (let i = 0; i < drops.length; i++) {
+                    const text = chars[Math.floor(Math.random() * chars.length)];
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                    drops[i]++;
+                }
+            }
+            
+            setInterval(draw, 50);
+            
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+        })();
+
+        // ==================== ATTACK MAP CANVAS ====================
+        (function() {
+            const canvas = document.getElementById('attackMapCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            function resize() {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                canvas.width = rect.width;
+                canvas.height = rect.height;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+            
+            const attacks = [];
+            const countries = [
+                {x:0.3, y:0.3, name:'أمريكا'}, {x:0.5, y:0.25, name:'أوروبا'}, {x:0.7, y:0.35, name:'الشرق الأوسط'},
+                {x:0.8, y:0.4, name:'الهند'}, {x:0.85, y:0.5, name:'الصين'}, {x:0.9, y:0.6, name:'أستراليا'},
+                {x:0.4, y:0.7, name:'البرازيل'}, {x:0.2, y:0.5, name:'المكسيك'}
+            ];
+            
+            function drawMap() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw world map dots
+                ctx.fillStyle = 'rgba(0, 212, 255, 0.1)';
+                for (let i = 0; i < 200; i++) {
+                    ctx.beginPath();
+                    ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, 1, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // Draw countries
+                countries.forEach(c => {
+                    const x = c.x * canvas.width;
+                    const y = c.y * canvas.height;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 6, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(0, 212, 255, 0.6)';
+                    ctx.fill();
+                    ctx.fillStyle = '#00d4ff';
+                    ctx.font = '10px Cairo';
+                    ctx.fillText(c.name, x - 20, y - 10);
+                });
+                
+                // Draw attacks
+                attacks.forEach((a, i) => {
+                    const progress = (Date.now() - a.start) / a.duration;
+                    if (progress >= 1) { attacks.splice(i, 1); return; }
+                    
+                    const sx = a.source.x * canvas.width;
+                    const sy = a.source.y * canvas.height;
+                    const tx = a.target.x * canvas.width;
+                    const ty = a.target.y * canvas.height;
+                    
+                    const cx = sx + (tx - sx) * progress;
+                    const cy = sy + (ty - sy) * progress;
+                    
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = a.type === 'critical' ? '#ff3366' : a.type === 'high' ? '#ff9500' : '#00d4ff';
+                    ctx.fill();
+                    
+                    // Trail
+                    ctx.beginPath();
+                    ctx.moveTo(sx, sy);
+                    ctx.lineTo(cx, cy);
+                    ctx.strokeStyle = `rgba(${a.type === 'critical' ? '255,51,102' : a.type === 'high' ? '255,149,0' : '0,212,255'}, ${0.3 * (1 - progress)})`;
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                });
+                
+                // Add new attacks
+                if (Math.random() > 0.95) {
+                    const source = countries[Math.floor(Math.random() * countries.length)];
+                    const target = countries[Math.floor(Math.random() * countries.length)];
+                    if (source !== target) {
+                        const types = ['critical', 'high', 'medium'];
+                        attacks.push({source, target, type: types[Math.floor(Math.random() * types.length)], start: Date.now(), duration: 2000 + Math.random() * 2000});
+                    }
+                }
+                
+                requestAnimationFrame(drawMap);
+            }
+            
+            drawMap();
+        })();
+
+        // ==================== INITIALIZATION ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('#notificationsPanel') && !e.target.closest('[onclick="toggleNotifications()"]')) {
+                    document.getElementById('notificationsPanel').classList.add('hidden');
+                }
+                if (!e.target.closest('#userMenu') && !e.target.closest('[onclick="toggleUserMenu()"]')) {
+                    document.getElementById('userMenu').classList.add('hidden');
+                }
+            });
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+                }
+            });
+        });
+    </script>
+</body>
+</html>
